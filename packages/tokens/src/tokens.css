@@ -1,9 +1,9 @@
 /*
- * @aster/tokens — CSS variable layer.
+ * @aster-cloud/tokens — CSS variable layer.
  *
  * Source of truth for both:
  *   - aster-cloud (consumed indirectly through the Tailwind preset)
- *   - aster-lang-dev (consumed directly: import "@aster/tokens/tokens.css"
+ *   - aster-lang-dev (consumed directly: import "@aster-cloud/tokens/tokens.css"
  *     then override --vp-c-brand-* to reference these variables)
  *
  * Conventions:

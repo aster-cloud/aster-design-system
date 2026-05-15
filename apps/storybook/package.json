@@ -8,8 +8,8 @@
     "build": "storybook build -o storybook-static"
   },
   "dependencies": {
-    "@aster/tokens": "workspace:*",
-    "@aster/ui": "workspace:*",
+    "@aster-cloud/tokens": "workspace:*",
+    "@aster-cloud/ui": "workspace:*",
     "react": "^18.3.0",
     "react-dom": "^18.3.0"
   },

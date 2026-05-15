@@ -17,7 +17,7 @@
  * Implementation notes:
  *   - Built with cva so variant×size combinations are exhaustive at the
  *     type level — consumers can't accidentally request "destructive-xs".
- *   - Uses Tailwind utilities that resolve through @aster/tokens' preset
+ *   - Uses Tailwind utilities that resolve through @aster-cloud/tokens' preset
  *     (`bg-primary`, `text-primary-fg`, etc.). The component is therefore
  *     unstyled without the preset wired up — that's by design: the preset
  *     IS the contract.

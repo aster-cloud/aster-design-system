@@ -1,7 +1,17 @@
 {
-  "name": "@aster/tokens",
+  "name": "@aster-cloud/tokens",
   "version": "0.1.0",
   "description": "Aster brand tokens — colors, typography, spacing, radius, shadow, motion. Consumed by aster-cloud (Tailwind preset) and aster-lang-dev (VitePress theme).",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aster-cloud/aster-design-system.git",
+    "directory": "packages/tokens"
+  },
+  "license": "MIT",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
   "types": "./dist/esm/index.d.ts",

@@ -14,7 +14,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import {
   Button, Card, CardHeader, CardTitle, CardDescription, CardBody, CardFooter,
   Wordmark,
-} from '@aster/ui';
+} from '@aster-cloud/ui';
 
 const violetSteps = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950] as const;
 const skySteps   = violetSteps;

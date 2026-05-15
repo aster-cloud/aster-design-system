@@ -14,10 +14,10 @@ importers:
 
   apps/storybook:
     dependencies:
-      '@aster/tokens':
+      '@aster-cloud/tokens':
         specifier: workspace:*
         version: link:../../packages/tokens
-      '@aster/ui':
+      '@aster-cloud/ui':
         specifier: workspace:*
         version: link:../../packages/ui
       react:
@@ -72,7 +72,7 @@ importers:
 
   packages/ui:
     dependencies:
-      '@aster/tokens':
+      '@aster-cloud/tokens':
         specifier: workspace:*
         version: link:../tokens
       class-variance-authority:

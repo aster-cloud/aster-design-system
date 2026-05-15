@@ -1,0 +1,63 @@
+name: Publish design-system to GitHub Packages
+
+# Two triggers:
+#   1. tag push matching v* → publish all packages at that version
+#   2. manual workflow_dispatch → emergency republish without retagging
+#
+# Why tag-driven rather than push-to-main:
+#   The design system advances at a different cadence than the consumer
+#   apps. We want explicit version bumps via tag so aster-cloud/aster-lang-dev
+#   pin to known good versions, not "whatever was on main when CI ran".
+#
+# Permissions:
+#   - contents:read so we can checkout
+#   - packages:write so we can publish to GitHub Packages registry
+#   No PAT needed — workflow uses GITHUB_TOKEN for the @aster-cloud scope
+#   because the repo owner matches.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@aster-cloud'
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm build
+
+      # Publish tokens first because ui depends on it transitively.
+      # `--no-git-checks` because tags are the canonical version source,
+      # and pnpm otherwise wants a clean working tree we just dirtied with
+      # the build output.
+      - name: Publish @aster-cloud/tokens
+        working-directory: packages/tokens
+        run: pnpm publish --no-git-checks --access=restricted
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish @aster-cloud/ui
+        working-directory: packages/ui
+        run: pnpm publish --no-git-checks --access=restricted
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

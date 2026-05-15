@@ -1,10 +1,10 @@
 /**
- * @aster/ui — single export surface.
+ * @aster-cloud/ui — single export surface.
  *
  * Consumers:
- *   import { Button, Card, Wordmark } from "@aster/ui";
+ *   import { Button, Card, Wordmark } from "@aster-cloud/ui";
  *
- * Requires that the consumer's Tailwind config extends @aster/tokens'
+ * Requires that the consumer's Tailwind config extends @aster-cloud/tokens'
  * preset, otherwise the component class names won't resolve.
  */
 

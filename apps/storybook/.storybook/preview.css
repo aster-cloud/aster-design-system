@@ -1,12 +1,12 @@
 /* Storybook global stylesheet.
  * 1. Pull in Aster token CSS variables.
- * 2. Pull in Tailwind (uses the @aster/tokens preset → utilities resolve
+ * 2. Pull in Tailwind (uses the @aster-cloud/tokens preset → utilities resolve
  *    to token values).
  * 3. Load brand fonts from Google Fonts. (Production apps should self-host;
  *    Storybook is fine on CDN.)
  */
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
-@import '@aster/tokens/tokens.css';
+@import '@aster-cloud/tokens/tokens.css';
 
 @tailwind base;
 @tailwind components;

@@ -1,10 +1,10 @@
 /**
- * @aster/tokens — single re-export surface.
+ * @aster-cloud/tokens — single re-export surface.
  *
  * Consumers:
- *   import { semantic, fontFamilies } from "@aster/tokens";
- *   import "@aster/tokens/tokens.css";  // CSS variables
- *   import asterPreset from "@aster/tokens/tailwind-preset"; // Tailwind preset
+ *   import { semantic, fontFamilies } from "@aster-cloud/tokens";
+ *   import "@aster-cloud/tokens/tokens.css";  // CSS variables
+ *   import asterPreset from "@aster-cloud/tokens/tailwind-preset"; // Tailwind preset
  */
 
 export * from './color.js';

@@ -87,7 +87,7 @@ export const asterTailwindPreset = {
   },
 } as const;
 
-// Default export so `import preset from '@aster/tokens/tailwind-preset'`
+// Default export so `import preset from '@aster-cloud/tokens/tailwind-preset'`
 // (or its CJS equivalent) hands the consumer the actual preset object,
 // not a namespace wrapper. Tailwind requires the value passed into
 // `presets: [...]` to itself be a Config-shaped object.

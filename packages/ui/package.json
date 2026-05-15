@@ -1,7 +1,17 @@
 {
-  "name": "@aster/ui",
+  "name": "@aster-cloud/ui",
   "version": "0.1.0",
-  "description": "Aster React UI primitives. Built on @aster/tokens. Consumed by aster-cloud.",
+  "description": "Aster React UI primitives. Built on @aster-cloud/tokens. Consumed by aster-cloud.",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aster-cloud/aster-design-system.git",
+    "directory": "packages/ui"
+  },
+  "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -23,7 +33,7 @@
     "react": "^18.2.0 || ^19.0.0"
   },
   "dependencies": {
-    "@aster/tokens": "workspace:*",
+    "@aster-cloud/tokens": "workspace:*",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1"
   },
