@@ -3,8 +3,7 @@
   "version": "0.1.0",
   "description": "Aster React UI primitives. Built on @aster-cloud/tokens. Consumed by aster-cloud.",
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com",
-    "access": "restricted"
+    "access": "public"
   },
   "repository": {
     "type": "git",

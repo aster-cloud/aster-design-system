@@ -1,4 +1,4 @@
-name: Publish design-system to GitHub Packages
+name: Publish design-system to npm
 
 # Two triggers:
 #   1. tag push matching v* → publish all packages at that version
@@ -6,14 +6,12 @@ name: Publish design-system to GitHub Packages
 #
 # Why tag-driven rather than push-to-main:
 #   The design system advances at a different cadence than the consumer
-#   apps. We want explicit version bumps via tag so aster-cloud/aster-lang-dev
+#   apps. Explicit version bumps via tag let aster-cloud/aster-lang-dev
 #   pin to known good versions, not "whatever was on main when CI ran".
 #
-# Permissions:
-#   - contents:read so we can checkout
-#   - packages:write so we can publish to GitHub Packages registry
-#   No PAT needed — workflow uses GITHUB_TOKEN for the @aster-cloud scope
-#   because the repo owner matches.
+# Auth: NPM_TOKEN secret with publish access to the @aster-cloud scope on
+# https://registry.npmjs.org (the same org that already publishes
+# @aster-cloud/aster-lang-ts).
 
 on:
   push:
@@ -26,20 +24,20 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
     steps:
       - uses: actions/checkout@v4
 
-      # Version is read from packageManager in root package.json so
-      # local and CI stay in lockstep.
       - uses: pnpm/action-setup@v4
+        # version read from packageManager in root package.json
 
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'pnpm'
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@aster-cloud'
+          # Tell setup-node to write an ~/.npmrc pointing at the public
+          # registry with NODE_AUTH_TOKEN as the auth source. pnpm picks
+          # it up automatically.
+          registry-url: 'https://registry.npmjs.org'
 
       - run: pnpm install --frozen-lockfile
 
@@ -52,12 +50,12 @@ jobs:
       # the build output.
       - name: Publish @aster-cloud/tokens
         working-directory: packages/tokens
-        run: pnpm publish --no-git-checks --access=restricted
+        run: pnpm publish --no-git-checks --access=public
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @aster-cloud/ui
         working-directory: packages/ui
-        run: pnpm publish --no-git-checks --access=restricted
+        run: pnpm publish --no-git-checks --access=public
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

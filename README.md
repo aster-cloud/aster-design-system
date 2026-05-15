@@ -31,11 +31,12 @@ friction.
 
 ## Publishing
 
-Packages live on GitHub Packages under the `@aster-cloud` scope. CI uses
-`GITHUB_TOKEN` for auth — no PAT required because the repo owner matches
-the scope.
+Packages live on **public npm** under the `@aster-cloud` scope — the same
+scope that already publishes `@aster-cloud/aster-lang-ts`. Public visibility
+is fine: design tokens aren't IP, and it means consumer apps need zero
+registry configuration.
 
-To cut a release locally (mirror of what CI does):
+Tag-driven release:
 
 ```bash
 # 1. Bump versions in packages/tokens + packages/ui
@@ -44,36 +45,28 @@ git tag v0.1.1
 git push origin v0.1.1
 ```
 
+The `Publish` workflow fires on the tag and ships both packages.
+Required: `NPM_TOKEN` GitHub secret with `publish` access to the
+`@aster-cloud` scope on npmjs.org.
+
 Manual publish (only if CI is broken):
 
 ```bash
-# Auth: create a classic PAT with `write:packages` + `read:packages` scopes
-# Export it as GITHUB_TOKEN (.npmrc reads from env).
-export GITHUB_TOKEN=ghp_xxx
+npm login --scope=@aster-cloud --registry=https://registry.npmjs.org
 pnpm build
-pnpm --filter @aster-cloud/tokens publish --no-git-checks --access=restricted
-pnpm --filter @aster-cloud/ui     publish --no-git-checks --access=restricted
+pnpm --filter @aster-cloud/tokens publish --no-git-checks --access=public
+pnpm --filter @aster-cloud/ui     publish --no-git-checks --access=public
 ```
 
 ## Consuming from aster-cloud / aster-lang-dev
 
-Both consumer apps need an `.npmrc` so pnpm knows where to fetch the
-scope from:
-
-```
-@aster-cloud:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
-```
-
-In dev: set `GITHUB_TOKEN` in your shell. In CI: pass it via the
-workflow's `secrets.GITHUB_TOKEN` (or a PAT secret if the consumer repo
-lives outside the `aster-cloud` org).
-
-Then standard install works:
-
 ```bash
-pnpm add @aster-cloud/tokens @aster-cloud/ui
+pnpm add @aster-cloud/tokens     # in aster-lang-dev (tokens only)
+pnpm add @aster-cloud/tokens @aster-cloud/ui   # in aster-cloud
 ```
+
+No `.npmrc`, no auth, no token env vars. The scope resolves on default
+public npm.
 
 ## Why a separate repo (not a monorepo with the apps)
 
