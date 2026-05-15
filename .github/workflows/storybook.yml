@@ -1,0 +1,65 @@
+name: Deploy Storybook
+
+# Public preview of the design system. Anyone with the URL can browse
+# the brand baseline, primitives, and design tokens without cloning
+# the repo or running pnpm locally — useful for design review, partner
+# eyes, and the marketing site team.
+#
+# Builds storybook-static and ships it to Cloudflare Pages. The
+# wrangler-action target name `aster-design-system` is reusable: the
+# Pages project handles all subsequent deploys.
+#
+# Trigger model:
+#   - push to main → deploy to production branch
+#   - pull_request → deploy to a preview URL (Pages auto-aliases)
+#
+# Required secrets (already set on this repo for npm publish):
+#   - CLOUDFLARE_API_TOKEN (Pages:Edit scope)
+#   - CLOUDFLARE_ACCOUNT_ID
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        # Version pulled from packageManager in root package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      # Build packages first so workspace deps (@aster-cloud/tokens,
+      # @aster-cloud/ui) have their dist/ available for Storybook's
+      # imports during the build.
+      - name: Build packages
+        run: pnpm build
+
+      - name: Build Storybook
+        working-directory: apps/storybook
+        run: pnpm build
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # First run will create the Pages project; subsequent runs
+          # update it. The project must already exist on the account
+          # OR the API token must have Pages:Edit permission so the
+          # action can create it on first push.
+          command: pages deploy apps/storybook/storybook-static --project-name aster-design-system --branch ${{ github.head_ref || github.ref_name }}
