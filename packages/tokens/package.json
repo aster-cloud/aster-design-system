@@ -1,0 +1,35 @@
+{
+  "name": "@aster/tokens",
+  "version": "0.1.0",
+  "description": "Aster brand tokens — colors, typography, spacing, radius, shadow, motion. Consumed by aster-cloud (Tailwind preset) and aster-lang-dev (VitePress theme).",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/esm/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "default": "./dist/cjs/index.js"
+    },
+    "./tokens.css": "./dist/tokens.css",
+    "./tailwind-preset": {
+      "types": "./dist/esm/tailwind-preset.d.ts",
+      "import": "./dist/esm/tailwind-preset.js",
+      "require": "./dist/cjs/tailwind-preset.js",
+      "default": "./dist/cjs/tailwind-preset.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.esm.json && tsc -p tsconfig.cjs.json && node ./scripts/postbuild.mjs",
+    "typecheck": "tsc -p tsconfig.esm.json --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0"
+  }
+}

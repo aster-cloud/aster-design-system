@@ -1,0 +1,192 @@
+/*
+ * @aster/tokens — CSS variable layer.
+ *
+ * Source of truth for both:
+ *   - aster-cloud (consumed indirectly through the Tailwind preset)
+ *   - aster-lang-dev (consumed directly: import "@aster/tokens/tokens.css"
+ *     then override --vp-c-brand-* to reference these variables)
+ *
+ * Conventions:
+ *   --aster-color-<scale>-<step>  raw color ramps (50…950)
+ *   --aster-<semantic>            named role tokens (primary, fg, bg, …)
+ *   --aster-radius-<size>         radius
+ *   --aster-shadow-<size>         shadow
+ *   --aster-font-<family>         font family stack
+ *   --aster-duration-<speed>      motion timings
+ *   --aster-easing-<name>         motion easings
+ *
+ * Dark mode: scoped to [data-theme="dark"] AND prefers-color-scheme: dark.
+ * Apps that want explicit control use the attribute; OS users get it free.
+ */
+
+:root {
+  /* ===== Violet (primary) ===== */
+  --aster-color-violet-50:  #f5f3ff;
+  --aster-color-violet-100: #ede9fe;
+  --aster-color-violet-200: #ddd6fe;
+  --aster-color-violet-300: #c4b5fd;
+  --aster-color-violet-400: #a78bfa;
+  --aster-color-violet-500: #8b5cf6;
+  --aster-color-violet-600: #7c3aed;
+  --aster-color-violet-700: #6d28d9;
+  --aster-color-violet-800: #5b21b6;
+  --aster-color-violet-900: #4c1d95;
+  --aster-color-violet-950: #2e1065;
+
+  /* ===== Sky (accent) ===== */
+  --aster-color-sky-50:  #f0f9ff;
+  --aster-color-sky-100: #e0f2fe;
+  --aster-color-sky-200: #bae6fd;
+  --aster-color-sky-300: #7dd3fc;
+  --aster-color-sky-400: #38bdf8;
+  --aster-color-sky-500: #0ea5e9;
+  --aster-color-sky-600: #0284c7;
+  --aster-color-sky-700: #0369a1;
+  --aster-color-sky-800: #075985;
+  --aster-color-sky-900: #0c4a6e;
+  --aster-color-sky-950: #082f49;
+
+  /* ===== Zinc (neutral) ===== */
+  --aster-color-zinc-50:  #fafafa;
+  --aster-color-zinc-100: #f4f4f5;
+  --aster-color-zinc-200: #e4e4e7;
+  --aster-color-zinc-300: #d4d4d8;
+  --aster-color-zinc-400: #a1a1aa;
+  --aster-color-zinc-500: #71717a;
+  --aster-color-zinc-600: #52525b;
+  --aster-color-zinc-700: #3f3f46;
+  --aster-color-zinc-800: #27272a;
+  --aster-color-zinc-900: #18181b;
+  --aster-color-zinc-950: #09090b;
+
+  /* ===== Semantic ===== */
+  --aster-color-emerald-500: #10b981;
+  --aster-color-emerald-600: #059669;
+  --aster-color-emerald-50:  #ecfdf5;
+  --aster-color-amber-500:   #f59e0b;
+  --aster-color-amber-600:   #d97706;
+  --aster-color-amber-50:    #fffbeb;
+  --aster-color-rose-500:    #f43f5e;
+  --aster-color-rose-600:    #e11d48;
+  --aster-color-rose-50:     #fff1f2;
+
+  /* ===== Semantic role tokens (consumer-facing) ===== */
+  --aster-primary:         var(--aster-color-violet-600);
+  --aster-primary-hover:   var(--aster-color-violet-700);
+  --aster-primary-active:  var(--aster-color-violet-800);
+  --aster-primary-fg:      #ffffff;
+  --aster-primary-subtle:  var(--aster-color-violet-50);
+  --aster-primary-ring:    var(--aster-color-violet-500);
+
+  --aster-accent:          var(--aster-color-sky-500);
+  --aster-accent-hover:    var(--aster-color-sky-600);
+  --aster-accent-fg:       #ffffff;
+  --aster-accent-subtle:   var(--aster-color-sky-50);
+
+  --aster-bg:              #ffffff;
+  --aster-bg-subtle:       var(--aster-color-zinc-50);
+  --aster-bg-muted:        var(--aster-color-zinc-100);
+  --aster-fg:              var(--aster-color-zinc-900);
+  --aster-fg-muted:        var(--aster-color-zinc-600);
+  --aster-fg-subtle:       var(--aster-color-zinc-500);
+  --aster-border:          var(--aster-color-zinc-200);
+  --aster-border-strong:   var(--aster-color-zinc-300);
+
+  --aster-success:         var(--aster-color-emerald-600);
+  --aster-success-fg:      #ffffff;
+  --aster-success-subtle:  var(--aster-color-emerald-50);
+  --aster-warning:         var(--aster-color-amber-500);
+  --aster-warning-fg:      var(--aster-color-zinc-900);
+  --aster-warning-subtle:  var(--aster-color-amber-50);
+  --aster-danger:          var(--aster-color-rose-600);
+  --aster-danger-fg:       #ffffff;
+  --aster-danger-subtle:   var(--aster-color-rose-50);
+
+  /* ===== Typography ===== */
+  --aster-font-display: "Fraunces", "Source Serif 4", Georgia, serif;
+  --aster-font-sans:    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --aster-font-mono:    "JetBrains Mono", "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+
+  /* ===== Radius ===== */
+  --aster-radius-xs:   0.125rem;
+  --aster-radius-sm:   0.25rem;
+  --aster-radius-md:   0.5rem;
+  --aster-radius-lg:   0.75rem;
+  --aster-radius-xl:   1rem;
+  --aster-radius-2xl:  1.5rem;
+  --aster-radius-full: 9999px;
+
+  /* ===== Shadow ===== */
+  --aster-shadow-xs:    0 1px 2px 0 rgb(9 9 11 / 0.04);
+  --aster-shadow-sm:    0 1px 3px 0 rgb(9 9 11 / 0.06), 0 1px 2px -1px rgb(9 9 11 / 0.06);
+  --aster-shadow-md:    0 4px 6px -1px rgb(9 9 11 / 0.08), 0 2px 4px -2px rgb(9 9 11 / 0.04);
+  --aster-shadow-lg:    0 10px 15px -3px rgb(9 9 11 / 0.08), 0 4px 6px -4px rgb(9 9 11 / 0.04);
+  --aster-shadow-xl:    0 20px 25px -5px rgb(9 9 11 / 0.08), 0 8px 10px -6px rgb(9 9 11 / 0.04);
+  --aster-shadow-2xl:   0 25px 50px -12px rgb(9 9 11 / 0.18);
+  --aster-shadow-brand: 0 8px 24px -8px rgb(124 58 237 / 0.35);
+  --aster-shadow-ring:  0 0 0 3px rgb(139 92 246 / 0.35);
+
+  /* ===== Motion ===== */
+  --aster-duration-instant: 0ms;
+  --aster-duration-fast:    150ms;
+  --aster-duration-medium:  250ms;
+  --aster-duration-slow:    400ms;
+  --aster-duration-slower:  600ms;
+
+  --aster-easing-standard:  cubic-bezier(0.4, 0, 0.2, 1);
+  --aster-easing-out:       cubic-bezier(0, 0, 0.2, 1);
+  --aster-easing-in:        cubic-bezier(0.4, 0, 1, 1);
+  --aster-easing-bounce:    cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Dark theme — explicit attribute wins; OS-driven fallback at the bottom. */
+[data-theme="dark"] {
+  --aster-primary:        var(--aster-color-violet-500);
+  --aster-primary-hover:  var(--aster-color-violet-400);
+  --aster-primary-active: var(--aster-color-violet-300);
+  --aster-primary-subtle: rgb(139 92 246 / 0.12);
+
+  --aster-accent:         var(--aster-color-sky-400);
+  --aster-accent-hover:   var(--aster-color-sky-300);
+  --aster-accent-subtle:  rgb(14 165 233 / 0.12);
+
+  --aster-bg:             var(--aster-color-zinc-950);
+  --aster-bg-subtle:      var(--aster-color-zinc-900);
+  --aster-bg-muted:       var(--aster-color-zinc-800);
+  --aster-fg:             var(--aster-color-zinc-50);
+  --aster-fg-muted:       var(--aster-color-zinc-300);
+  --aster-fg-subtle:      var(--aster-color-zinc-400);
+  --aster-border:         var(--aster-color-zinc-800);
+  --aster-border-strong:  var(--aster-color-zinc-700);
+
+  --aster-shadow-xs:    0 1px 2px 0 rgb(0 0 0 / 0.4);
+  --aster-shadow-sm:    0 1px 3px 0 rgb(0 0 0 / 0.5), 0 1px 2px -1px rgb(0 0 0 / 0.5);
+  --aster-shadow-md:    0 4px 6px -1px rgb(0 0 0 / 0.6), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+  --aster-shadow-lg:    0 10px 15px -3px rgb(0 0 0 / 0.6), 0 4px 6px -4px rgb(0 0 0 / 0.4);
+  --aster-shadow-xl:    0 20px 25px -5px rgb(0 0 0 / 0.7), 0 8px 10px -6px rgb(0 0 0 / 0.4);
+  --aster-shadow-2xl:   0 25px 50px -12px rgb(0 0 0 / 0.8);
+  --aster-shadow-brand: 0 8px 24px -8px rgb(167 139 250 / 0.5);
+  --aster-shadow-ring:  0 0 0 3px rgb(167 139 250 / 0.45);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --aster-primary:        var(--aster-color-violet-500);
+    --aster-primary-hover:  var(--aster-color-violet-400);
+    --aster-primary-active: var(--aster-color-violet-300);
+    --aster-primary-subtle: rgb(139 92 246 / 0.12);
+    --aster-accent:         var(--aster-color-sky-400);
+    --aster-accent-hover:   var(--aster-color-sky-300);
+    --aster-accent-subtle:  rgb(14 165 233 / 0.12);
+    --aster-bg:             var(--aster-color-zinc-950);
+    --aster-bg-subtle:      var(--aster-color-zinc-900);
+    --aster-bg-muted:       var(--aster-color-zinc-800);
+    --aster-fg:             var(--aster-color-zinc-50);
+    --aster-fg-muted:       var(--aster-color-zinc-300);
+    --aster-fg-subtle:      var(--aster-color-zinc-400);
+    --aster-border:         var(--aster-color-zinc-800);
+    --aster-border-strong:  var(--aster-color-zinc-700);
+    --aster-shadow-brand:   0 8px 24px -8px rgb(167 139 250 / 0.5);
+    --aster-shadow-ring:    0 0 0 3px rgb(167 139 250 / 0.45);
+  }
+}
