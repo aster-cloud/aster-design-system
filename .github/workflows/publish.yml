@@ -46,16 +46,40 @@ jobs:
 
       # Publish tokens first because ui depends on it transitively.
       # `--no-git-checks` because tags are the canonical version source,
-      # and pnpm otherwise wants a clean working tree we just dirtied with
-      # the build output.
+      # and pnpm otherwise wants a clean working tree we just dirtied
+      # with the build output.
+      #
+      # We swallow "version already published" (E403) so tagging a UI-
+      # only bump doesn't force a tokens version bump. Anything else
+      # still fails the run.
       - name: Publish @aster-cloud/tokens
         working-directory: packages/tokens
-        run: pnpm publish --no-git-checks --access=public
+        run: |
+          set -o pipefail
+          pnpm publish --no-git-checks --access=public 2>&1 | tee /tmp/tokens-publish.log
+          status=${PIPESTATUS[0]}
+          if [ $status -ne 0 ]; then
+            if grep -q "previously published versions" /tmp/tokens-publish.log; then
+              echo "tokens@$(jq -r .version package.json) already on registry — skipping"
+              exit 0
+            fi
+            exit $status
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @aster-cloud/ui
         working-directory: packages/ui
-        run: pnpm publish --no-git-checks --access=public
+        run: |
+          set -o pipefail
+          pnpm publish --no-git-checks --access=public 2>&1 | tee /tmp/ui-publish.log
+          status=${PIPESTATUS[0]}
+          if [ $status -ne 0 ]; then
+            if grep -q "previously published versions" /tmp/ui-publish.log; then
+              echo "ui@$(jq -r .version package.json) already on registry — skipping"
+              exit 0
+            fi
+            exit $status
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
