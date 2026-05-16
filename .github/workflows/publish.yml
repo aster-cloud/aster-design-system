@@ -54,13 +54,16 @@ jobs:
       # still fails the run.
       - name: Publish @aster-cloud/tokens
         working-directory: packages/tokens
+        shell: bash {0}
         run: |
-          set -o pipefail
-          pnpm publish --no-git-checks --access=public 2>&1 | tee /tmp/tokens-publish.log
-          status=${PIPESTATUS[0]}
+          # No `-e` so a non-zero `pnpm publish` doesn't bail before we
+          # get a chance to inspect the failure mode.
+          out=$(pnpm publish --no-git-checks --access=public 2>&1)
+          status=$?
+          echo "$out"
           if [ $status -ne 0 ]; then
-            if grep -q "previously published versions" /tmp/tokens-publish.log; then
-              echo "tokens@$(jq -r .version package.json) already on registry — skipping"
+            if echo "$out" | grep -q "previously published versions"; then
+              echo "tokens@$(node -p "require('./package.json').version") already on registry — skipping"
               exit 0
             fi
             exit $status
@@ -70,13 +73,14 @@ jobs:
 
       - name: Publish @aster-cloud/ui
         working-directory: packages/ui
+        shell: bash {0}
         run: |
-          set -o pipefail
-          pnpm publish --no-git-checks --access=public 2>&1 | tee /tmp/ui-publish.log
-          status=${PIPESTATUS[0]}
+          out=$(pnpm publish --no-git-checks --access=public 2>&1)
+          status=$?
+          echo "$out"
           if [ $status -ne 0 ]; then
-            if grep -q "previously published versions" /tmp/ui-publish.log; then
-              echo "ui@$(jq -r .version package.json) already on registry — skipping"
+            if echo "$out" | grep -q "previously published versions"; then
+              echo "ui@$(node -p "require('./package.json').version") already on registry — skipping"
               exit 0
             fi
             exit $status
