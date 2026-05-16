@@ -47,10 +47,16 @@ const buttonVariants = cva(
           'active:bg-primary-active',
           'shadow-sm hover:shadow-brand',
         ].join(' '),
+        // Resting fill sits one shade DEEPER than the page surface so
+        // the button silhouette is always perceptible — bg-zinc-100
+        // alone reads as text on aster-cloud's zinc-50 cards. A 1px
+        // border-strong outline carries the same shape into dark
+        // mode where bg-zinc-800 sits on bg-zinc-950 surfaces.
         secondary: [
-          'bg-zinc-100 text-zinc-900',
-          'hover:bg-zinc-200 active:bg-zinc-300',
-          'dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700',
+          'bg-zinc-200 text-zinc-900 border border-border-strong',
+          'hover:bg-zinc-300 active:bg-zinc-400',
+          'dark:bg-zinc-800 dark:text-zinc-100 dark:border-border-strong',
+          'dark:hover:bg-zinc-700 dark:active:bg-zinc-600',
         ].join(' '),
         ghost: [
           'bg-transparent text-fg',
