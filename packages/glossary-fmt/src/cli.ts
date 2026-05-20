@@ -37,6 +37,27 @@ switch (subcommand) {
     }
     break;
   }
+  case 'sync': {
+    const backboneTree = args[1];
+    const targetTree = args[2];
+    const dryRun = args.includes('--dry-run');
+    if (!backboneTree || !targetTree) {
+      console.error('usage: glossary-fmt sync <backbone-tree> <target-tree> [--dry-run]');
+      process.exit(2);
+    }
+    const result = runSync(backboneTree, targetTree, dryRun);
+    console.log(
+      `[sync] ${dryRun ? 'DRY RUN — would copy' : 'copied'} ${result.totalCopied} block IDs from ${backboneTree} → ${targetTree} across ${result.fileCount} file pairs`,
+    );
+    if (result.mismatches.length > 0) {
+      console.log(`[sync] structure mismatch in ${result.mismatches.length} file pairs (target needs manual review):`);
+      for (const m of result.mismatches.slice(0, 20)) {
+        console.log(`  ${m.path}: backbone has ${m.backboneCount} block-eligible paragraphs, target has ${m.targetCount}`);
+      }
+      if (result.mismatches.length > 20) console.log(`  … and ${result.mismatches.length - 20} more`);
+    }
+    break;
+  }
   case 'lint': {
     const docTree = args[1] ?? '.';
     const files = collectMarkdown(docTree);
@@ -75,7 +96,7 @@ switch (subcommand) {
     break;
   }
   default:
-    console.error('usage: glossary-fmt <insert|lint|move-file|rename-block> ...');
+    console.error('usage: glossary-fmt <insert|sync|lint|move-file|rename-block> ...');
     process.exit(2);
 }
 
@@ -161,4 +182,108 @@ function runInsert(docTree: string, dryRun: boolean): InsertResult {
   }
 
   return { totalInserted, fileCount: files.length };
+}
+
+interface SyncResult {
+  totalCopied: number;
+  fileCount: number;
+  mismatches: Array<{ path: string; backboneCount: number; targetCount: number }>;
+}
+
+/**
+ * Sync backbone block IDs into a target locale tree (plan §1.5).
+ *
+ * The backbone tree must already be `insert`ed. For each (relative)
+ * markdown file present in both trees:
+ *   - Read backbone markers in their existing line order — that's the
+ *     canonical ID sequence to apply to the target.
+ *   - Run `planInsertions` on the target prose to find target paragraph
+ *     boundaries.
+ *   - Pair them ordinally; if counts match, splice backbone IDs into
+ *     the target file at the planned positions; record into the target's
+ *     block-map under the same IDs (with target's path in `occurrences`).
+ *   - If counts don't match, leave the file alone and report a mismatch.
+ *
+ * Backbone block-map's `occurrences` is also updated to register the
+ * target file under the same IDs.
+ */
+function runSync(backboneTree: string, targetTree: string, dryRun: boolean): SyncResult {
+  const backboneFiles = collectMarkdown(backboneTree);
+  const targetFiles = collectMarkdown(targetTree);
+  const targetByPath = new Map(targetFiles.map((f) => [f.path, f]));
+  const backboneMap = loadBlockMap(backboneTree);
+  const targetMap: BlockMap = JSON.parse(JSON.stringify(loadBlockMap(targetTree)));
+  const now = new Date().toISOString();
+
+  let totalCopied = 0;
+  const mismatches: SyncResult['mismatches'] = [];
+
+  for (const backboneFile of backboneFiles) {
+    const target = targetByPath.get(backboneFile.path);
+    if (!target) continue;
+
+    // Extract backbone marker IDs in order.
+    const markerRe = /<!--\s*glossary:block\s+id=([a-z0-9][a-z0-9-]*)\s*-->/g;
+    const backboneIds: string[] = [];
+    let m: RegExpExecArray | null;
+    while ((m = markerRe.exec(backboneFile.content)) !== null) {
+      backboneIds.push(m[1]!);
+    }
+    if (backboneIds.length === 0) continue;
+
+    // Skip if target already has markers (don't overwrite manual work).
+    if (markerRe.test(target.content)) {
+      // Reset for next loop (regexp 'g' flag retains lastIndex)
+      markerRe.lastIndex = 0;
+      continue;
+    }
+
+    // Find target insertion points using the same planner as `insert`.
+    const plans = planInsertions(target.content, DEFAULT_FMT_CONFIG);
+    if (plans.length !== backboneIds.length) {
+      mismatches.push({
+        path: backboneFile.path,
+        backboneCount: backboneIds.length,
+        targetCount: plans.length,
+      });
+      continue;
+    }
+
+    // Pair ordinally + splice from bottom up.
+    const lines = target.content.split('\n');
+    const pairs = plans.map((p, i) => ({ ...p, id: backboneIds[i]! }));
+    pairs.sort((a, b) => b.startLine - a.startLine);
+    for (const pair of pairs) {
+      lines.splice(pair.endLine, 0, '<!-- /glossary:block -->');
+      lines.splice(pair.startLine - 1, 0, `<!-- glossary:block id=${pair.id} -->`);
+      // Record the occurrence in BOTH maps.
+      const existing = targetMap.blocks[pair.id] ?? {
+        'created-at': now,
+        'created-by': 'glossary-fmt sync v0.1.0',
+        occurrences: {},
+        'alias-of': null,
+      };
+      existing.occurrences[target.path] = { 'line-hint': pair.startLine };
+      targetMap.blocks[pair.id] = existing;
+      if (backboneMap.blocks[pair.id]) {
+        backboneMap.blocks[pair.id]!.occurrences[target.path] = { 'line-hint': pair.startLine };
+      }
+      totalCopied++;
+    }
+
+    if (!dryRun) {
+      writeFileSync(join(targetTree, target.path), lines.join('\n'), 'utf8');
+    }
+  }
+
+  if (!dryRun && totalCopied > 0) {
+    saveBlockMap(targetTree, targetMap);
+    saveBlockMap(backboneTree, backboneMap);
+  }
+
+  return {
+    totalCopied,
+    fileCount: backboneFiles.filter((f) => targetByPath.has(f.path)).length,
+    mismatches,
+  };
 }
