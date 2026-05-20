@@ -2,7 +2,7 @@
 // glossary-fmt CLI — see ../README.md for usage.
 
 import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { join, relative, basename, extname } from 'node:path';
 import {
   blockMapPath,
   loadBlockMap,
@@ -10,12 +10,33 @@ import {
   lintBlockMap,
   moveFileInBlockMap,
   renameBlock,
+  planInsertions,
+  generateBlockId,
+  DEFAULT_FMT_CONFIG,
+  FMT_CONFIG_VERSION,
+  type BlockMap,
 } from './index.js';
 
 const args = process.argv.slice(2);
 const subcommand = args[0];
 
 switch (subcommand) {
+  case 'insert': {
+    const docTree = args[1];
+    const dryRun = args.includes('--dry-run');
+    if (!docTree) {
+      console.error('usage: glossary-fmt insert <doc-tree> [--dry-run]');
+      process.exit(2);
+    }
+    const result = runInsert(docTree, dryRun);
+    console.log(
+      `[insert] ${dryRun ? 'DRY RUN — would annotate' : 'annotated'} ${result.totalInserted} blocks across ${result.fileCount} files`,
+    );
+    if (!dryRun) {
+      console.log(`[insert] block-map: ${result.totalInserted} new entries in ${blockMapPath(docTree)}`);
+    }
+    break;
+  }
   case 'lint': {
     const docTree = args[1] ?? '.';
     const files = collectMarkdown(docTree);
@@ -54,7 +75,7 @@ switch (subcommand) {
     break;
   }
   default:
-    console.error('usage: glossary-fmt <lint|move-file|rename-block> ...');
+    console.error('usage: glossary-fmt <insert|lint|move-file|rename-block> ...');
     process.exit(2);
 }
 
@@ -73,4 +94,71 @@ function collectMarkdown(root: string): Array<{ path: string; content: string }>
   };
   walk(root);
   return out;
+}
+
+interface InsertResult {
+  totalInserted: number;
+  fileCount: number;
+}
+
+function runInsert(docTree: string, dryRun: boolean): InsertResult {
+  const files = collectMarkdown(docTree);
+  const initialMap = loadBlockMap(docTree);
+  const map: BlockMap = JSON.parse(JSON.stringify(initialMap));
+  const taken = new Set(Object.keys(map.blocks));
+  const now = new Date().toISOString();
+  let totalInserted = 0;
+
+  for (const file of files) {
+    const plans = planInsertions(file.content, DEFAULT_FMT_CONFIG);
+    if (plans.length === 0) continue;
+
+    // Two-pass: assign IDs, then rewrite the file line-by-line so we can
+    // splice in markers without invalidating line numbers from later plans.
+    const lines = file.content.split('\n');
+    // Track per-plan {startLine, endLine, id}. We process from BOTTOM to TOP so
+    // earlier-line splices don't shift later-line positions.
+    const inserts: Array<{ startLine: number; endLine: number; id: string }> = [];
+
+    for (const plan of plans) {
+      if (plan.existingId) {
+        continue; // already annotated; leave alone
+      }
+      // Per-(file, heading, node-type) seq counter — count blocks already
+      // generated in THIS file for the same (heading-slug, node-type) so the
+      // sequence number is stable when re-running on a half-annotated file.
+      const ctxBlocks = inserts.length;
+      const id = generateBlockId(file.path, plan.headingTrail, plan.nodeType, ctxBlocks + 1, taken);
+      taken.add(id);
+      inserts.push({ startLine: plan.startLine, endLine: plan.endLine, id });
+      map.blocks[id] = {
+        'created-at': now,
+        'created-by': 'glossary-fmt insert v0.1.0',
+        occurrences: { [file.path]: { 'line-hint': plan.startLine } },
+        'alias-of': null,
+      };
+      totalInserted++;
+    }
+
+    if (inserts.length === 0) continue;
+
+    // Apply splices from bottom up.
+    inserts.sort((a, b) => b.startLine - a.startLine);
+    for (const ins of inserts) {
+      // Insert closing marker AFTER endLine (1-indexed).
+      lines.splice(ins.endLine, 0, '<!-- /glossary:block -->');
+      // Insert opening marker BEFORE startLine.
+      lines.splice(ins.startLine - 1, 0, `<!-- glossary:block id=${ins.id} -->`);
+    }
+
+    if (!dryRun) {
+      writeFileSync(join(docTree, file.path), lines.join('\n'), 'utf8');
+    }
+  }
+
+  if (!dryRun && totalInserted > 0) {
+    saveBlockMap(docTree, map);
+  }
+
+  return { totalInserted, fileCount: files.length };
 }
