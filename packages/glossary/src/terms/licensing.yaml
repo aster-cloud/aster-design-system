@@ -1,0 +1,121 @@
+version: 1
+terms:
+  license-key:
+    id: license-key
+    category: licensing
+    sense: licensing.credential
+    part-of-speech: noun
+    definition: The signed string customers paste into LICENSE_KEY env to activate their on-prem deployment.
+    disambiguation: >
+      The signed string ("aster-ent-v2-...") customers paste into LICENSE_KEY env.
+      NOT cryptographic key material; NOT a keyboard key.
+    user-facing: true
+    introduced-in: PR-L1
+    lifecycle: { status: active, since-version: 1, backbone-revision: 1, reviewed-backbone-revision: { zh-CN: 1, de-DE: 1 } }
+    translations:
+      en-US: license key
+      zh-CN: 授权密钥
+      de-DE: Lizenzschlüssel
+    match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
+    tenant-overridable: true
+    applies-to: [aster-cloud:messages, aster-cloud:docs/on-prem, aster-lang-dev:docs]
+
+  revocation-list:
+    id: revocation-list
+    category: licensing
+    part-of-speech: noun
+    definition: Signed list of revoked license IDs, fetched periodically by on-prem deployments.
+    user-facing: true
+    introduced-in: PR-L1
+    lifecycle: { status: active, since-version: 1, backbone-revision: 1, reviewed-backbone-revision: { zh-CN: 1, de-DE: 1 } }
+    translations:
+      en-US: revocation list
+      zh-CN: 撤销列表
+      de-DE: Sperrliste
+    match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
+
+  grace-period:
+    id: grace-period
+    category: licensing
+    part-of-speech: noun
+    definition: 7-day window after expiry during which a license still verifies, giving customer time to roll out the new key.
+    user-facing: true
+    introduced-in: PR-L1
+    lifecycle: { status: active, since-version: 1, backbone-revision: 1, reviewed-backbone-revision: { zh-CN: 1, de-DE: 1 } }
+    translations:
+      en-US: grace period
+      zh-CN: 宽限期
+      de-DE: Kulanzfrist
+    match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
+
+  renewal-overlap:
+    id: renewal-overlap
+    category: licensing
+    part-of-speech: noun
+    definition: Window during which both old and new license keys verify, after a successful renewal.
+    user-facing: true
+    introduced-in: I
+    lifecycle: { status: active, since-version: 1, backbone-revision: 1, reviewed-backbone-revision: { zh-CN: 1, de-DE: 1 } }
+    translations:
+      en-US: renewal overlap
+      zh-CN: 续约重叠期
+      de-DE: Verlängerungsüberlappung
+    match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
+
+  air-gapped-license:
+    id: air-gapped-license
+    category: licensing
+    part-of-speech: noun
+    definition: License SKU for customers with no SaaS callback; no revocation check, perpetual or 5-year term.
+    user-facing: true
+    introduced-in: PR-L1
+    lifecycle: { status: active, since-version: 1, backbone-revision: 1, reviewed-backbone-revision: { zh-CN: 1, de-DE: 1 } }
+    translations:
+      en-US: air-gapped license
+      zh-CN: 物理隔离授权
+      de-DE: Air-Gapped-Lizenz
+    match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, punctuation, whitespace] }
+
+  enterprise-sku:
+    id: enterprise-sku
+    category: licensing
+    part-of-speech: noun
+    definition: Premium license SKU with on-prem deployment + envelope encryption + full telemetry transparency.
+    user-facing: true
+    introduced-in: PR-L1
+    lifecycle: { status: active, since-version: 1, backbone-revision: 1, reviewed-backbone-revision: { zh-CN: 1, de-DE: 1 } }
+    translations:
+      en-US: enterprise SKU
+      zh-CN: 企业版
+      de-DE: Enterprise-SKU
+    match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
+    tenant-overridable: true
+
+  standard-sku:
+    id: standard-sku
+    category: licensing
+    part-of-speech: noun
+    definition: Default SaaS-hosted license SKU with multi-tenant infrastructure.
+    user-facing: true
+    introduced-in: PR-L1
+    lifecycle: { status: active, since-version: 1, backbone-revision: 1, reviewed-backbone-revision: { zh-CN: 1, de-DE: 1 } }
+    translations:
+      en-US: standard SKU
+      zh-CN: 标准版
+      de-DE: Standard-SKU
+    match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
+    tenant-overridable: true
+
+  superseded-license:
+    id: superseded-license
+    category: licensing
+    part-of-speech: noun
+    definition: A license whose successor has been signed and activated; original remains valid through renewal overlap.
+    user-facing: true
+    introduced-in: I
+    lifecycle: { status: active, since-version: 1, backbone-revision: 1, reviewed-backbone-revision: { zh-CN: 1, de-DE: 1 } }
+    translations:
+      en-US: superseded license
+      zh-CN: 已被替换的授权
+      de-DE: ersetzte Lizenz
+    match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }

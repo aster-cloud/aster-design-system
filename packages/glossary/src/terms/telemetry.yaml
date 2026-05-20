@@ -1,0 +1,189 @@
+version: 1
+terms:
+  telemetry:
+    id: telemetry
+    category: telemetry
+    sense: telemetry.aggregate-usage
+    part-of-speech: noun
+    definition: Opt-in aggregate usage counters sent from on-prem to SaaS for capacity planning + renewal review.
+    user-facing: true
+    introduced-in: J1
+    lifecycle: { status: active, since-version: 1, backbone-revision: 1, reviewed-backbone-revision: { zh-CN: 1, de-DE: 1 } }
+    translations:
+      en-US: telemetry
+      zh-CN: 遥测
+      de-DE: Telemetrie
+    match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
+    forbidden-aliases:
+      zh-CN:
+        - text: 远程测量
+          match: { mode: phrase, case-sensitive: false }
+    applies-to: [aster-cloud:messages, aster-cloud:docs/on-prem, aster-lang-dev:docs]
+
+  telemetry-opt-in:
+    id: telemetry-opt-in
+    category: telemetry
+    part-of-speech: phrase
+    definition: Customer's explicit choice to enable telemetry via ASTER_TELEMETRY_OPT_IN=1.
+    user-facing: true
+    introduced-in: J1
+    lifecycle: { status: active, since-version: 1, backbone-revision: 1, reviewed-backbone-revision: { zh-CN: 1, de-DE: 1 } }
+    translations:
+      en-US: telemetry opt-in
+      zh-CN: 启用遥测
+      de-DE: Telemetrie-Aktivierung
+    match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
+    applies-to: [aster-cloud:docs/on-prem]
+
+  telemetry-opt-out:
+    id: telemetry-opt-out
+    category: telemetry
+    part-of-speech: phrase
+    definition: Default state where no telemetry leaves the on-prem deployment.
+    user-facing: true
+    introduced-in: J1
+    lifecycle: { status: active, since-version: 1, backbone-revision: 1, reviewed-backbone-revision: { zh-CN: 1, de-DE: 1 } }
+    translations:
+      en-US: telemetry opt-out
+      zh-CN: 关闭遥测
+      de-DE: Telemetrie-Deaktivierung
+    match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
+
+  telemetry-payload:
+    id: telemetry-payload
+    category: telemetry
+    part-of-speech: noun
+    definition: The JSON document containing aggregate counters for one upload window.
+    user-facing: true
+    introduced-in: J1
+    lifecycle: { status: active, since-version: 1, backbone-revision: 1, reviewed-backbone-revision: { zh-CN: 1, de-DE: 1 } }
+    translations:
+      en-US: telemetry payload
+      zh-CN: 遥测数据
+      de-DE: Telemetrie-Nutzdaten
+    match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
+
+  data-residency:
+    id: data-residency
+    category: telemetry
+    sense: telemetry.region-tagging
+    part-of-speech: noun
+    definition: GDPR Art 44 cross-border transfer tag on each LicenseTelemetry row.
+    legal-basis: GDPR Art 44
+    user-facing: true
+    introduced-in: J2
+    lifecycle: { status: active, since-version: 1, backbone-revision: 1, reviewed-backbone-revision: { zh-CN: 1, de-DE: 1 } }
+    translations:
+      en-US: data residency
+      zh-CN: 数据所在区域
+      de-DE: Datenresidenz
+    match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
+    forbidden-aliases:
+      zh-CN:
+        - text: 数据驻留区域
+          match: { mode: phrase, case-sensitive: false }
+        - text: 数据驻留地
+          match: { mode: phrase, case-sensitive: false }
+      de-DE:
+        - text: Datenaufenthalt
+          match: { mode: phrase, case-sensitive: false }
+
+  data-region:
+    id: data-region
+    category: telemetry
+    part-of-speech: noun
+    definition: The specific region tag value (us / eu / apac / unknown).
+    user-facing: true
+    introduced-in: J2
+    lifecycle: { status: active, since-version: 1, backbone-revision: 1, reviewed-backbone-revision: { zh-CN: 1, de-DE: 1 } }
+    translations:
+      en-US: data region
+      zh-CN: 数据区域
+      de-DE: Datenregion
+    match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
+
+  customer-mask:
+    id: customer-mask
+    category: telemetry
+    part-of-speech: noun
+    definition: Anonymized customer token (anon-<hex>-<len>) used when ASTER_TELEMETRY_MASK_CUSTOMER=1.
+    user-facing: true
+    introduced-in: J2
+    lifecycle: { status: active, since-version: 1, backbone-revision: 1, reviewed-backbone-revision: { zh-CN: 1, de-DE: 1 } }
+    translations:
+      en-US: customer mask
+      zh-CN: 客户字段脱敏
+      de-DE: Kundenmaskierung
+    match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
+
+  dedup:
+    id: dedup
+    category: telemetry
+    part-of-speech: noun
+    definition: SaaS-side rejection of duplicate (license_id, period_start, period_end) tuples.
+    user-facing: true
+    introduced-in: J1
+    lifecycle: { status: active, since-version: 1, backbone-revision: 1, reviewed-backbone-revision: { zh-CN: 1, de-DE: 1 } }
+    translations:
+      en-US: deduplication
+      zh-CN: 去重
+      de-DE: Deduplizierung
+    match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
+
+  aggregation-window:
+    id: aggregation-window
+    category: telemetry
+    part-of-speech: noun
+    definition: The fixed time interval over which telemetry counters are summed.
+    user-facing: true
+    introduced-in: J1
+    lifecycle: { status: active, since-version: 1, backbone-revision: 1, reviewed-backbone-revision: { zh-CN: 1, de-DE: 1 } }
+    translations:
+      en-US: aggregation window
+      zh-CN: 聚合窗口
+      de-DE: Aggregationsfenster
+    match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
+
+  period-start:
+    id: period-start
+    category: telemetry
+    part-of-speech: noun
+    user-facing: true
+    do-not-translate: true
+    definition: ISO-8601 inclusive lower bound of the aggregation window (field name on the wire).
+    introduced-in: J1
+    lifecycle: { status: active, since-version: 1, backbone-revision: 1 }
+    translations:
+      en-US: periodStart
+      zh-CN: periodStart
+      de-DE: periodStart
+    match: { mode: literal, case-sensitive: true }
+
+  period-end:
+    id: period-end
+    category: telemetry
+    part-of-speech: noun
+    user-facing: true
+    do-not-translate: true
+    definition: ISO-8601 exclusive upper bound of the aggregation window (field name on the wire).
+    introduced-in: J1
+    lifecycle: { status: active, since-version: 1, backbone-revision: 1 }
+    translations:
+      en-US: periodEnd
+      zh-CN: periodEnd
+      de-DE: periodEnd
+    match: { mode: literal, case-sensitive: true }
+
+  seat-limit-hit:
+    id: seat-limit-hit
+    category: telemetry
+    part-of-speech: noun
+    definition: Boolean flag indicating the deployment touched its licensed seat ceiling during the window.
+    user-facing: true
+    introduced-in: J1
+    lifecycle: { status: active, since-version: 1, backbone-revision: 1, reviewed-backbone-revision: { zh-CN: 1, de-DE: 1 } }
+    translations:
+      en-US: seat limit hit
+      zh-CN: 已达座位上限
+      de-DE: Sitzplatzlimit erreicht
+    match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }

@@ -1,0 +1,145 @@
+version: 1
+terms:
+  envelope-encryption:
+    id: envelope-encryption
+    category: encryption
+    sense: encryption.wrapping
+    part-of-speech: noun
+    disambiguation: >
+      Product security feature for wrapping HMAC verification secrets under a KEK.
+      NOT a mailing envelope, NOT a legal envelope, NOT a UI container.
+    definition: >
+      AES-256-GCM wrapping of per-license HMAC verification secrets
+      under a KEK held in our secrets manager.
+    legal-basis: GDPR Art 32
+    introduced-in: J3
+    user-facing: true
+    lifecycle:
+      status: active
+      since-version: 1
+      backbone-revision: 1
+      reviewed-backbone-revision:
+        zh-CN: 1
+        de-DE: 1
+    translations:
+      en-US: envelope encryption
+      zh-CN: 信封加密
+      de-DE: Umhüllungsverschlüsselung
+    match:
+      mode: phrase
+      case-sensitive: false
+      boundary: unicode-word
+      normalize: [case, width, punctuation, whitespace]
+    forbidden-aliases:
+      zh-CN:
+        - text: 封套加密
+          match: { mode: phrase, case-sensitive: false }
+        - text: 包络加密
+          match: { mode: phrase, case-sensitive: false }
+      de-DE:
+        - text: Umschlag-Verschlüsselung
+          match: { mode: phrase, case-sensitive: false }
+    applies-to:
+      - aster-cloud:messages
+      - aster-lang-dev:docs
+      - aster-cloud:docs/on-prem
+
+  kek:
+    id: kek
+    category: encryption
+    sense: encryption.kek
+    part-of-speech: acronym
+    user-facing: true
+    do-not-translate: true
+    definition: Key Encryption Key — the AES-256 key that wraps telemetry HMAC secrets.
+    introduced-in: J3
+    lifecycle:
+      status: active
+      since-version: 1
+      backbone-revision: 1
+      reviewed-backbone-revision:
+        zh-CN: 1
+        de-DE: 1
+    translations:
+      en-US: Key Encryption Key (KEK)
+      zh-CN: 密钥加密密钥（KEK）
+      de-DE: Key Encryption Key (KEK)
+    match:
+      mode: phrase
+      case-sensitive: true
+    applies-to:
+      - aster-cloud:docs/saas
+
+  dek:
+    id: dek
+    category: encryption
+    sense: encryption.dek
+    part-of-speech: acronym
+    user-facing: false
+    do-not-translate: true
+    definition: Data Encryption Key — symmetric key actually encrypting data; reserved for future expansion of envelope model.
+    lifecycle:
+      status: reserved
+      since-version: 1
+      backbone-revision: 1
+    translations:
+      en-US: Data Encryption Key (DEK)
+      zh-CN: 数据加密密钥（DEK）
+      de-DE: Data Encryption Key (DEK)
+    match:
+      mode: phrase
+      case-sensitive: true
+
+  hmac-secret:
+    id: hmac-secret
+    category: encryption
+    sense: encryption.hmac
+    part-of-speech: noun
+    user-facing: true
+    definition: Per-license shared secret used to sign telemetry uploads via HMAC-SHA256.
+    introduced-in: J2
+    lifecycle:
+      status: active
+      since-version: 1
+      backbone-revision: 1
+      reviewed-backbone-revision:
+        zh-CN: 1
+        de-DE: 1
+    translations:
+      en-US: HMAC secret
+      zh-CN: HMAC 密钥
+      de-DE: HMAC-Geheimnis
+    match:
+      mode: phrase
+      case-sensitive: false
+      boundary: unicode-word
+      normalize: [width, whitespace]
+    applies-to:
+      - aster-cloud:docs/on-prem
+
+  signing-key-id:
+    id: signing-key-id
+    category: encryption
+    sense: encryption.signing-key-id
+    part-of-speech: noun
+    user-facing: true
+    definition: Stable identifier (e.g. license-signing-v2-2026-01) for the Ed25519 keypair that signed a license.
+    introduced-in: PR-L1
+    lifecycle:
+      status: active
+      since-version: 1
+      backbone-revision: 1
+      reviewed-backbone-revision:
+        zh-CN: 1
+        de-DE: 1
+    translations:
+      en-US: signing key ID
+      zh-CN: 签名密钥 ID
+      de-DE: Signaturschlüssel-ID
+    match:
+      mode: phrase
+      case-sensitive: false
+      boundary: unicode-word
+      normalize: [case, width, whitespace]
+    applies-to:
+      - aster-cloud:messages

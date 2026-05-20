@@ -1,0 +1,58 @@
+version: 1
+terms:
+  cron-lease:
+    id: cron-lease
+    category: cron
+    part-of-speech: noun
+    definition: Postgres-backed mutex (job_name, window_start) preventing duplicate cron execution across internal + external triggers.
+    user-facing: true
+    introduced-in: V2
+    lifecycle: { status: active, since-version: 1, backbone-revision: 1, reviewed-backbone-revision: { zh-CN: 1, de-DE: 1 } }
+    translations:
+      en-US: cron lease
+      zh-CN: 定时任务租约
+      de-DE: Cron-Lease
+    match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
+
+  cron-window-start:
+    id: cron-window-start
+    category: cron
+    part-of-speech: noun
+    do-not-translate: true
+    definition: Canonical UTC boundary for a cron execution window; computed by the registry per schedule.
+    user-facing: true
+    introduced-in: V2
+    lifecycle: { status: active, since-version: 1, backbone-revision: 1 }
+    translations:
+      en-US: window-start
+      zh-CN: window-start
+      de-DE: window-start
+    match: { mode: literal, case-sensitive: true }
+
+  scheduled-trigger:
+    id: scheduled-trigger
+    category: cron
+    part-of-speech: noun
+    definition: Cloudflare Workers `scheduled()` invocation firing a cron route on its declared schedule.
+    user-facing: true
+    introduced-in: V2
+    lifecycle: { status: active, since-version: 1, backbone-revision: 1, reviewed-backbone-revision: { zh-CN: 1, de-DE: 1 } }
+    translations:
+      en-US: scheduled trigger
+      zh-CN: 定时触发
+      de-DE: geplanter Trigger
+    match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
+
+  external-trigger:
+    id: external-trigger
+    category: cron
+    part-of-speech: noun
+    definition: Manual or GitHub-Actions HTTP POST firing the same cron route; deduplicated via cron-lease.
+    user-facing: true
+    introduced-in: V2
+    lifecycle: { status: active, since-version: 1, backbone-revision: 1, reviewed-backbone-revision: { zh-CN: 1, de-DE: 1 } }
+    translations:
+      en-US: external trigger
+      zh-CN: 外部触发
+      de-DE: externer Trigger
+    match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }

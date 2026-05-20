@@ -1,0 +1,74 @@
+{
+  "name": "@aster-cloud/glossary",
+  "version": "0.1.0",
+  "description": "Aster glossary contract — single source of truth for cross-locale terminology. See .claude/plan/glossary-contract.md (v7) in aster-cloud for design.",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aster-cloud/aster-design-system.git",
+    "directory": "packages/glossary"
+  },
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./loader": {
+      "types": "./dist/loader.d.ts",
+      "default": "./dist/loader.js"
+    },
+    "./scanner": {
+      "types": "./dist/scanner.d.ts",
+      "default": "./dist/scanner.js"
+    },
+    "./manifest": {
+      "types": "./dist/manifest.d.ts",
+      "default": "./dist/manifest.js"
+    },
+    "./denylist": {
+      "types": "./dist/denylist.d.ts",
+      "default": "./dist/denylist.js"
+    },
+    "./schema": {
+      "types": "./dist/schema.d.ts",
+      "default": "./dist/schema.js"
+    },
+    "./export-json": "./dist/glossary.export.json",
+    "./terms": "./src/terms/",
+    "./locales": "./src/locales.yaml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc && node ./scripts/build-export-json.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:contract": "vitest run tests/contract",
+    "test:scanner": "vitest run tests/scanner",
+    "test:integration": "vitest run tests/integration"
+  },
+  "dependencies": {
+    "remark": "^15.0.1",
+    "remark-parse": "^11.0.0",
+    "unified": "^11.0.5",
+    "unist-util-visit": "^5.0.0",
+    "yaml": "^2.5.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/mdast": "^4.0.4",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}

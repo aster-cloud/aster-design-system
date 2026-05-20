@@ -1,0 +1,10 @@
+version: 1
+localesVersion: 1
+locales:
+  - id: en-US
+    role: backbone
+    bcp47: en-US
+  - id: zh-CN
+    bcp47: zh-Hans-CN
+  - id: de-DE
+    bcp47: de-DE

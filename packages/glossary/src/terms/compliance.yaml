@@ -1,0 +1,139 @@
+version: 1
+terms:
+  dsar:
+    id: dsar
+    category: compliance
+    part-of-speech: acronym
+    do-not-translate: true
+    definition: Data Subject Access Request — GDPR Art 15 / Art 17 self-service endpoint.
+    legal-basis: GDPR Art 15, 17
+    user-facing: true
+    introduced-in: J5
+    lifecycle: { status: active, since-version: 1, backbone-revision: 1 }
+    translations:
+      en-US: DSAR
+      zh-CN: DSAR（数据主体访问请求）
+      de-DE: DSGVO-Anfrage
+    match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [width, whitespace] }
+    applies-to: [aster-cloud:messages, aster-cloud:docs/on-prem]
+
+  dsar-access:
+    id: dsar-access
+    category: compliance
+    part-of-speech: phrase
+    definition: GDPR Art 15 request to receive a copy of stored telemetry rows.
+    legal-basis: GDPR Art 15
+    user-facing: true
+    introduced-in: J5
+    lifecycle: { status: active, since-version: 1, backbone-revision: 1, reviewed-backbone-revision: { zh-CN: 1, de-DE: 1 } }
+    translations:
+      en-US: DSAR access
+      zh-CN: DSAR 访问请求
+      de-DE: DSGVO-Auskunftsanfrage
+    match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [width, whitespace] }
+
+  dsar-deletion:
+    id: dsar-deletion
+    category: compliance
+    part-of-speech: phrase
+    definition: GDPR Art 17 right-to-erasure for stored telemetry rows.
+    legal-basis: GDPR Art 17
+    user-facing: true
+    introduced-in: J5
+    lifecycle: { status: active, since-version: 1, backbone-revision: 1, reviewed-backbone-revision: { zh-CN: 1, de-DE: 1 } }
+    translations:
+      en-US: DSAR deletion
+      zh-CN: DSAR 删除请求
+      de-DE: DSGVO-Löschanfrage
+    match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [width, whitespace] }
+
+  dry-run-preview:
+    id: dry-run-preview
+    category: compliance
+    part-of-speech: noun
+    definition: Preview a delete operation's affected row count without actually deleting; audit-logged as dry-run-preview.
+    user-facing: true
+    introduced-in: J5
+    lifecycle: { status: active, since-version: 1, backbone-revision: 1, reviewed-backbone-revision: { zh-CN: 1, de-DE: 1 } }
+    translations:
+      en-US: dry-run preview
+      zh-CN: 试运行预览
+      de-DE: Probelauf-Vorschau
+    match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, punctuation, whitespace] }
+
+  access-audit:
+    id: access-audit
+    category: compliance
+    part-of-speech: noun
+    definition: Per-read audit record on the TelemetryAccessAudit table.
+    legal-basis: SOC 2 CC6.1, GDPR Art 30
+    user-facing: true
+    introduced-in: J1
+    lifecycle: { status: active, since-version: 1, backbone-revision: 1, reviewed-backbone-revision: { zh-CN: 1, de-DE: 1 } }
+    translations:
+      en-US: access audit
+      zh-CN: 访问审计
+      de-DE: Zugriffsaudit
+    match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
+
+  delete-audit:
+    id: delete-audit
+    category: compliance
+    part-of-speech: noun
+    definition: Per-deletion audit record retained for 7 years for regulatory evidence.
+    legal-basis: GDPR Art 30
+    user-facing: true
+    introduced-in: J1
+    lifecycle: { status: active, since-version: 1, backbone-revision: 1, reviewed-backbone-revision: { zh-CN: 1, de-DE: 1 } }
+    translations:
+      en-US: delete audit
+      zh-CN: 删除审计
+      de-DE: Löschaudit
+    match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
+
+  retention-window:
+    id: retention-window
+    category: compliance
+    part-of-speech: noun
+    definition: How long different categories of data are kept (365d telemetry / 90d read audits / 7y delete audits).
+    legal-basis: GDPR Art 5(1)(e)
+    user-facing: true
+    introduced-in: J1
+    lifecycle: { status: active, since-version: 1, backbone-revision: 1, reviewed-backbone-revision: { zh-CN: 1, de-DE: 1 } }
+    translations:
+      en-US: retention window
+      zh-CN: 保留期
+      de-DE: Aufbewahrungsfenster
+    match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
+
+  gdpr-art-15:
+    id: gdpr-art-15
+    category: compliance
+    part-of-speech: acronym
+    do-not-translate: true
+    definition: GDPR Article 15 — Right of Access.
+    legal-basis: GDPR Art 15
+    user-facing: true
+    introduced-in: J5
+    lifecycle: { status: active, since-version: 1, backbone-revision: 1 }
+    translations:
+      en-US: GDPR Art 15
+      zh-CN: GDPR 第 15 条
+      de-DE: DSGVO Art. 15
+    match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [width, whitespace] }
+
+  gdpr-art-17:
+    id: gdpr-art-17
+    category: compliance
+    part-of-speech: acronym
+    do-not-translate: true
+    definition: GDPR Article 17 — Right to Erasure.
+    legal-basis: GDPR Art 17
+    user-facing: true
+    introduced-in: J5
+    lifecycle: { status: active, since-version: 1, backbone-revision: 1 }
+    translations:
+      en-US: GDPR Art 17
+      zh-CN: GDPR 第 17 条
+      de-DE: DSGVO Art. 17
+    match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [width, whitespace] }

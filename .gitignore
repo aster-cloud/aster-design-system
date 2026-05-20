@@ -8,3 +8,5 @@ build/
 storybook-static/
 .env
 .env.local
+# v7 §8.7 — glossary consumer-side cache directory (CI-populated, never committed)
+.glossary/cache/
