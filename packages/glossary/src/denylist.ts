@@ -122,6 +122,14 @@ async function fetchWithRetry(
   url: string,
   opts: { timeoutMs: number; maxRetries: number },
 ): Promise<string> {
+  // Test seam: file:// URLs read directly.
+  if (url.startsWith('file://')) {
+    const { readFileSync, existsSync } = await import('node:fs');
+    const path = url.slice('file://'.length);
+    if (!existsSync(path)) throw new Error(`HTTP 404 (file not found): ${path}`);
+    return readFileSync(path, 'utf8');
+  }
+
   let lastError: unknown;
   for (let attempt = 0; attempt <= opts.maxRetries; attempt++) {
     if (attempt > 0) {

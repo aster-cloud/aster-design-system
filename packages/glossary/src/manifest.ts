@@ -80,10 +80,15 @@ export async function fetchAndVerifyManifest(
         maxRetries: opts.maxRetries ?? 3,
       });
       const manifest = ReleaseManifestSchema.parse(JSON.parse(fetched));
+      // assertManifestState throws ManifestStateError if not `promoted` — those
+      // errors are CONTENT errors, not network errors. Re-throw immediately
+      // instead of swallowing and trying the next source; every source will
+      // serve the same content and we want to surface "not promoted" loudly.
       assertManifestState(manifest, opts.version);
       writeCache(cacheFile, fetched, now);
       return { state: 'fresh', manifest, source: url };
     } catch (err) {
+      if (err instanceof ManifestStateError) throw err;
       errors.push(`${url}: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
@@ -122,6 +127,15 @@ async function fetchWithRetry(
   url: string,
   opts: { timeoutMs: number; maxRetries: number },
 ): Promise<string> {
+  // Test seam: file:// URLs are read directly from the filesystem so
+  // unit tests don't need to spin up an HTTP server.
+  if (url.startsWith('file://')) {
+    const { readFileSync, existsSync } = await import('node:fs');
+    const path = url.slice('file://'.length);
+    if (!existsSync(path)) throw new Error(`HTTP 404 (file not found): ${path}`);
+    return readFileSync(path, 'utf8');
+  }
+
   let lastError: unknown;
   for (let attempt = 0; attempt <= opts.maxRetries; attempt++) {
     if (attempt > 0) {

@@ -1,0 +1,49 @@
+# Glossary Contract — consumer registry.
+# Plan: aster-cloud/.claude/plan/glossary-contract.md (v7) §10.2.1.
+#
+# Adding a new consumer = one PR editing this file + @aster/glossary-stewards
+# approval. No code change to the matrix-generator script required.
+
+version: 1
+consumers:
+  - org: aster-cloud
+    repo: aster-cloud
+    tier: official
+    status: active
+    glossary-config-path: glossary.config.yaml
+    expected-surfaces: [messages, docs-onprem, docs-saas]
+
+  - org: aster-cloud
+    repo: aster-lang-dev
+    tier: official
+    status: active
+    glossary-config-path: glossary.config.yaml
+    expected-surfaces: [docs]
+
+  - org: aster-cloud
+    repo: aster-lang-core
+    tier: official
+    status: active
+    glossary-config-path: glossary.config.yaml
+    expected-surfaces: [overlays]
+
+  - org: aster-cloud
+    repo: aster-lang-en
+    tier: official
+    status: active
+    glossary-config-path: glossary.config.yaml
+    expected-surfaces: [overlays, vocabularies]
+
+  - org: aster-cloud
+    repo: aster-lang-zh
+    tier: official
+    status: active
+    glossary-config-path: glossary.config.yaml
+    expected-surfaces: [overlays, vocabularies]
+
+  - org: aster-cloud
+    repo: aster-lang-de
+    tier: official
+    status: active
+    glossary-config-path: glossary.config.yaml
+    expected-surfaces: [overlays, vocabularies]
