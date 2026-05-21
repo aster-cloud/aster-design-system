@@ -187,6 +187,36 @@ describe('scan — pairKey diagnostics (Round-2 fix)', () => {
   });
 });
 
+describe('scan — surface-scoped pairKey (Cleanup-4 consumer regression)', () => {
+  it('surface-scoped pairKey prevents same-basename cross-surface false-pair', () => {
+    // Mimics the consumer driver pattern: pairKey = `${surfaceName}:<path>`.
+    // `docs-onprem/intro.md` and `docs-saas/intro.md` should NOT be paired
+    // even though they share a basename (and share the locale).
+    const result = scan(
+      {
+        markdownSurfaces: [
+          {
+            path: 'docs/on-prem/foo/intro.md',
+            locale: 'en-US',
+            pairKey: 'docs-onprem:foo/intro.md',
+            content: '<!-- glossary:block id=x -->\nUse envelope encryption.\n<!-- /glossary:block -->',
+          },
+          {
+            path: 'docs/saas/bar/intro.md',
+            locale: 'zh-CN',
+            pairKey: 'docs-saas:bar/intro.md', // different surface, distinct pairKey
+            content: '<!-- glossary:block id=x -->\n这是无关内容\n<!-- /glossary:block -->',
+          },
+        ],
+      },
+      { glossary, strict: true },
+    );
+    // No parity finding should fire — they're not a pair.
+    const parityFindings = result.issues.filter((i) => i.rule === 'term-mention-parity');
+    expect(parityFindings).toHaveLength(0);
+  });
+});
+
 describe('scan — explicit pairKey pairing (Critical-5 regression)', () => {
   it('does not falsely pair same-named files in different directories', () => {
     // Without explicit pairKey, the old basename heuristic would have
