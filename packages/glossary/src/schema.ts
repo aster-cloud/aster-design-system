@@ -321,3 +321,38 @@ export const ConsumersFileSchema = z.object({
 
 export type ConsumerEntry = z.infer<typeof ConsumerEntrySchema>;
 export type ConsumersFile = z.infer<typeof ConsumersFileSchema>;
+
+// ───────── Consumer-side glossary.config.yaml schema ─────────
+// Shared so consumer scripts can validate config via Zod instead of
+// strong-cast (`as Config`). See aster-cloud/scripts/check-glossary.ts +
+// aster-lang-dev/scripts/check-glossary.ts for usage.
+
+export const GlossaryConfigSurfaceSchema = z.object({
+  type: z.enum(['json', 'markdown']),
+  paths: z.union([z.string(), z.array(z.string())]),
+  'backbone-locale': z.string().optional(),
+  'locale-from-filename': z.boolean().optional(),
+  'locale-from-frontmatter': z.boolean().optional(),
+  'fallback-locale': z.string().optional(),
+  alignment: z.enum(['block-id']).optional(),
+});
+
+export const GlossaryConfigSchema = z.object({
+  version: z.literal(1),
+  tier: z.enum(['official', 'community']),
+  localesVersion: z.number().int().positive(),
+  'glossary-pin': z
+    .object({
+      version: z.string(),
+      'npm-integrity': z.string(),
+      'maven-sha256': z.string(),
+    })
+    .optional(),
+  surfaces: z.record(z.string(), GlossaryConfigSurfaceSchema),
+  'ignored-surfaces': z
+    .array(z.object({ path: z.string(), reason: z.string(), expires: z.string().optional() }))
+    .optional(),
+  'untranslated-tokens': z.array(z.string()).optional(),
+});
+
+export type GlossaryConfig = z.infer<typeof GlossaryConfigSchema>;

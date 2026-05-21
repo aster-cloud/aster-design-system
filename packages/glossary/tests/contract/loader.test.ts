@@ -186,6 +186,76 @@ terms:
     expect(() => loadGlossary({ rootDir: dir })).toThrow(GlossaryValidationError);
   });
 
+  it('rejects reviewed-regex pattern that matches the empty string', () => {
+    const dir = tmp();
+    writeFixture(dir, {
+      'locales.yaml': minLocales,
+      'a.yaml': `
+version: 1
+terms:
+  foo:
+    id: foo
+    category: test
+    part-of-speech: noun
+    user-facing: true
+    definition: x
+    lifecycle: { status: active, since-version: 1, backbone-revision: 1 }
+    translations: { en-US: '.*?', zh-CN: '富' }
+    match: { mode: reviewed-regex, regex-rationale: 'malicious empty-match pattern for test' }
+`,
+    });
+    expect(() => loadGlossary({ rootDir: dir })).toThrow(/empty string/);
+  });
+
+  it('rejects forbidden-alias regex empty-match even when term.match is phrase', () => {
+    // Round-2 codex finding: alias regex validation was nested under
+    // `if (term.match.mode === 'reviewed-regex')`, so phrase-mode terms
+    // with regex aliases slipped through.
+    const dir = tmp();
+    writeFixture(dir, {
+      'locales.yaml': minLocales,
+      'a.yaml': `
+version: 1
+terms:
+  foo:
+    id: foo
+    category: test
+    part-of-speech: noun
+    user-facing: true
+    definition: x
+    lifecycle: { status: active, since-version: 1, backbone-revision: 1 }
+    translations: { en-US: foo, zh-CN: 富 }
+    match: { mode: phrase }
+    forbidden-aliases:
+      zh-CN:
+        - text: '.*?'
+          match: { mode: reviewed-regex, regex-rationale: 'malicious alias for test' }
+`,
+    });
+    expect(() => loadGlossary({ rootDir: dir })).toThrow(/empty string/);
+  });
+
+  it('rejects malformed reviewed-regex at load time', () => {
+    const dir = tmp();
+    writeFixture(dir, {
+      'locales.yaml': minLocales,
+      'a.yaml': `
+version: 1
+terms:
+  foo:
+    id: foo
+    category: test
+    part-of-speech: noun
+    user-facing: true
+    definition: x
+    lifecycle: { status: active, since-version: 1, backbone-revision: 1 }
+    translations: { en-US: '[unclosed', zh-CN: '富' }
+    match: { mode: reviewed-regex, regex-rationale: 'malformed for test' }
+`,
+    });
+    expect(() => loadGlossary({ rootDir: dir })).toThrow(/failed to compile/);
+  });
+
   it('rejects backbone-revision > 1 without change-type', () => {
     const dir = tmp();
     writeFixture(dir, {

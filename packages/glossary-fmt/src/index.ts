@@ -231,12 +231,17 @@ export function lintBlockMap(
     }
   }
 
-  // Every block-map entry has a marker.
+  // Every block-map entry has a marker. Build a single Set of all marker
+  // ids across all files (one extraction per file, not per block-id) so
+  // the check is O(B + sum(markers)) instead of O(B·F) regex compiles.
+  const allMarkerIds = new Set<string>();
+  for (const file of markdownFiles) {
+    for (const m of file.content.matchAll(/<!--\s*glossary:block\s+id=([a-z0-9][a-z0-9-]*)\s*-->/g)) {
+      allMarkerIds.add(m[1]!);
+    }
+  }
   for (const id of Object.keys(map.blocks)) {
-    const present = markdownFiles.some((f) =>
-      new RegExp(`<!--\\s*glossary:block\\s+id=${id}\\s*-->`).test(f.content),
-    );
-    if (!present) {
+    if (!allMarkerIds.has(id)) {
       issues.push({
         severity: 'error',
         filePath: blockMapPath(docTree),

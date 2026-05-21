@@ -99,18 +99,45 @@ export function loadGlossary(opts: LoadGlossaryOptions = {}): Glossary {
         issues.push(`${id}: missing translation for locale "${loc}"`);
       }
     }
-    // 2. user-facing terms must have non-empty translations for every locale.
+    // 2. user-facing terms must have non-empty translations after trim
+    //    (schema.min(1) only catches the empty string; whitespace-only slips through).
     if (term['user-facing']) {
       for (const loc of locales) {
         const t = term.translations[loc];
         if (!t || t.trim().length === 0) {
-          issues.push(`${id}: user-facing term has empty translation for "${loc}"`);
+          issues.push(`${id}: user-facing term has empty/whitespace-only translation for "${loc}"`);
         }
       }
     }
     // 3. Backbone translation must exist.
     if (!term.translations[backboneLocale]) {
       issues.push(`${id}: backbone-locale "${backboneLocale}" translation missing`);
+    }
+    // 4. reviewed-regex patterns must compile + not match the empty string
+    //    (empty-match patterns like `.*?` or `^` deadlock the scanner's
+    //    `while (re.exec())` loop because lastIndex doesn't advance).
+    if (term.match.mode === 'reviewed-regex') {
+      for (const loc of locales) {
+        const pattern = term.translations[loc];
+        if (!pattern) continue;
+        validateRegex(issues, `${id}: reviewed-regex pattern for "${loc}"`, pattern, term.match['case-sensitive']);
+      }
+    }
+    // 4b. forbidden-alias regex validation is INDEPENDENT of term.match.mode.
+    //     A phrase term can carry a reviewed-regex alias; that alias's regex
+    //     must still be validated at load time. (Round-2 codex finding: the
+    //     check was previously nested inside the `term.match.mode ===
+    //     'reviewed-regex'` branch, so phrase-mode terms slipped through.)
+    for (const [loc, aliases] of Object.entries(term['forbidden-aliases'])) {
+      for (const alias of aliases) {
+        if (alias.match.mode !== 'reviewed-regex') continue;
+        validateRegex(
+          issues,
+          `${id}: forbidden-alias[${loc}] regex "${alias.text}"`,
+          alias.text,
+          alias.match['case-sensitive'],
+        );
+      }
     }
   }
 
@@ -192,6 +219,32 @@ export function loadFromExport(exportPath: string): Glossary {
 
 function normalizeForCompare(s: string): string {
   return s.normalize('NFC').toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * Compile a reviewed-regex pattern at load time. Fails the loader if:
+ *   - the pattern is malformed (SyntaxError) — would have crashed the scanner
+ *   - the pattern matches the empty string — would deadlock the
+ *     `while (re.exec())` loop because `lastIndex` never advances
+ *
+ * `caseSensitive=false` mirrors the scanner's `giu` flag set.
+ */
+function validateRegex(
+  issues: string[],
+  label: string,
+  pattern: string,
+  caseSensitive: boolean,
+): void {
+  let re: RegExp;
+  try {
+    re = new RegExp(pattern, caseSensitive ? 'gu' : 'giu');
+  } catch (e) {
+    issues.push(`${label} failed to compile: ${e instanceof Error ? e.message : String(e)}`);
+    return;
+  }
+  if (re.test('')) {
+    issues.push(`${label} matches empty string — would deadlock scanner (refusing to load)`);
+  }
 }
 
 // Re-exports for convenience

@@ -104,7 +104,7 @@ function collectMarkdown(root: string): Array<{ path: string; content: string }>
   const out: Array<{ path: string; content: string }> = [];
   const walk = (dir: string) => {
     for (const name of readdirSync(dir)) {
-      if (name.startsWith('.')) continue;
+      if (name.startsWith('.') || name === 'node_modules' || name === 'dist') continue;
       const p = join(dir, name);
       const s = statSync(p);
       if (s.isDirectory()) walk(p);

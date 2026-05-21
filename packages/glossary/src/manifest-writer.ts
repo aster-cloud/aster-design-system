@@ -2,7 +2,7 @@
 //
 // Server-side ONLY — runs in the publish workflow, not in consumer
 // CI. Produces signed `releases/<version>.json` files that consumers
-// verify via `manifest.ts` + KMS public key bundled in the package.
+// verify via `manifest.ts` + bundled trust store.
 //
 // State machine:
 //   prepared → rc-validating → rc-validated → npm-promoting →
@@ -11,8 +11,15 @@
 // Any transition can also go to `failed` (terminal); recovery is via
 // out-of-band denylist (see `denylist-writer.ts`).
 //
-// Signing is intentionally pluggable: in production the `sign` argument
-// hits KMS via OIDC. In tests we pass a stub.
+// Signature covers `signedProjection()` — a deterministic projection
+// over the IMMUTABLE fields (version, localesVersion, state,
+// transitions, checksums, consumers[].repo, consumers[].tier). The
+// mutable tracking field `consumers[].lockfile-pr` is OUTSIDE the
+// signed projection, so `recordLockfilePr()` can update it without
+// re-signing. The verifier in `manifest.ts` uses the same projection.
+//
+// Signing is pluggable: production passes a KMS-backed Ed25519 signer,
+// tests pass an in-process keypair signer.
 
 import { createHash } from 'node:crypto';
 import { ReleaseManifestSchema, type ReleaseManifest } from './schema.js';
@@ -33,6 +40,26 @@ export interface SignFn {
   (payload: string): Promise<string>;
 }
 
+/**
+ * Deterministic signed projection — covers the immutable subset of a
+ * manifest. Used by both signer (server-side) and verifier (consumer-side)
+ * so they always hash the same bytes.
+ *
+ * Excludes:
+ *   - `consumers[].lockfile-pr` and `consumers[].merged-at` (mutable tracking)
+ *   - `signature` itself
+ */
+export function signedProjection(m: Omit<ReleaseManifest, 'signature'>): unknown {
+  return {
+    version: m.version,
+    localesVersion: m.localesVersion,
+    state: m.state,
+    transitions: m.transitions,
+    checksums: m.checksums,
+    consumers: m.consumers.map((c) => ({ repo: c.repo, tier: c.tier })),
+  };
+}
+
 export async function createReleaseManifest(input: NewReleaseInput, sign: SignFn): Promise<ReleaseManifest> {
   const now = new Date().toISOString();
   const unsigned: Omit<ReleaseManifest, 'signature'> = {
@@ -51,7 +78,7 @@ export async function createReleaseManifest(input: NewReleaseInput, sign: SignFn
       'lockfile-pr': null,
     })),
   };
-  const signature = await sign(canonicalize(unsigned));
+  const signature = await sign(canonicalize(signedProjection(unsigned)));
   return ReleaseManifestSchema.parse({ ...unsigned, signature });
 }
 
@@ -89,8 +116,8 @@ export async function transitionManifest(
     state: to,
     transitions: [...manifest.transitions, { to, at: new Date().toISOString(), by }],
   };
-  // Re-sign (transitions array changed, so signature must regenerate).
-  const signature = await sign(canonicalize(next));
+  // Re-sign (state + transitions array changed, both inside signedProjection).
+  const signature = await sign(canonicalize(signedProjection(next)));
   return ReleaseManifestSchema.parse({ ...next, signature });
 }
 
@@ -100,10 +127,9 @@ export function recordLockfilePr(
   prUrl: string,
   mergedAt?: string,
 ): ReleaseManifest {
-  // Updating consumer rows does NOT re-sign the manifest by design — the
-  // signature covers the immutable parts (version, state, transitions,
-  // checksums). consumer.lockfile-pr is a tracking field; tampering with
-  // it doesn't change what the contract authorizes.
+  // No re-signing: `lockfile-pr` and `merged-at` are mutable tracking fields
+  // OUTSIDE `signedProjection()`. The existing signature still verifies
+  // against the unchanged immutable subset.
   return ReleaseManifestSchema.parse({
     ...manifest,
     consumers: manifest.consumers.map((c) =>

@@ -25,6 +25,9 @@
     },
     "./package.json": "./package.json"
   },
+  "engines": {
+    "node": ">=20"
+  },
   "files": [
     "dist",
     "src"

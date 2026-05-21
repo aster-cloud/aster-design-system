@@ -117,6 +117,131 @@ describe('scan — JSON forbidden-alias detection', () => {
   });
 });
 
+describe('scan — pairKey diagnostics (Round-2 fix)', () => {
+  it('emits surface-coverage warning when pairKey is missing (non-strict)', () => {
+    const result = scan(
+      {
+        markdownSurfaces: [
+          {
+            path: 'docs/intro.md',
+            locale: 'en-US',
+            // pairKey intentionally omitted
+            content: '<!-- glossary:block id=x -->\nUse envelope encryption.\n<!-- /glossary:block -->',
+          },
+        ],
+      },
+      { glossary, strict: false },
+    );
+    const warn = result.issues.find(
+      (i) => i.rule === 'surface-coverage' && i.detail.includes('lacks explicit pairKey'),
+    );
+    expect(warn).toBeDefined();
+    expect(warn!.severity).toBe('warning');
+  });
+
+  it('escalates missing pairKey to error under strict', () => {
+    const result = scan(
+      {
+        markdownSurfaces: [
+          {
+            path: 'docs/intro.md',
+            locale: 'en-US',
+            content: '<!-- glossary:block id=x -->\nUse envelope encryption.\n<!-- /glossary:block -->',
+          },
+        ],
+      },
+      { glossary, strict: true },
+    );
+    const issue = result.issues.find(
+      (i) => i.rule === 'surface-coverage' && i.detail.includes('lacks explicit pairKey'),
+    );
+    expect(issue).toBeDefined();
+    expect(issue!.severity).toBe('error');
+  });
+
+  it('emits error on pairKey collision (two surfaces same pairKey + locale)', () => {
+    const result = scan(
+      {
+        markdownSurfaces: [
+          {
+            path: 'docs/intro.md',
+            locale: 'en-US',
+            pairKey: 'intro',
+            content: '<!-- glossary:block id=x -->\nfirst.\n<!-- /glossary:block -->',
+          },
+          {
+            path: 'docs/duplicate-intro.md',
+            locale: 'en-US',
+            pairKey: 'intro', // collision!
+            content: '<!-- glossary:block id=y -->\nsecond.\n<!-- /glossary:block -->',
+          },
+        ],
+      },
+      { glossary, strict: true },
+    );
+    const err = result.issues.find(
+      (i) => i.rule === 'surface-coverage' && i.detail.includes('already mapped'),
+    );
+    expect(err).toBeDefined();
+    expect(err!.severity).toBe('error');
+  });
+});
+
+describe('scan — explicit pairKey pairing (Critical-5 regression)', () => {
+  it('does not falsely pair same-named files in different directories', () => {
+    // Without explicit pairKey, the old basename heuristic would have
+    // matched docs/api/intro.md ↔ docs/policy/zh/intro.md.
+    const result = scan(
+      {
+        markdownSurfaces: [
+          {
+            path: 'docs/api/intro.md',
+            locale: 'en-US',
+            pairKey: 'api/intro',
+            content: '<!-- glossary:block id=x -->\nUse envelope encryption today.\n<!-- /glossary:block -->',
+          },
+          {
+            path: 'docs/policy/zh/intro.md',
+            locale: 'zh-CN',
+            pairKey: 'policy/intro', // different pair — must NOT be matched
+            content: '<!-- glossary:block id=x -->\n使用未注册的术语\n<!-- /glossary:block -->',
+          },
+        ],
+      },
+      { glossary, strict: true },
+    );
+    const parityFindings = result.issues.filter((i) => i.rule === 'term-mention-parity');
+    expect(parityFindings).toHaveLength(0);
+  });
+
+  it('uses pairKey to pair surfaces explicitly across directories', () => {
+    const result = scan(
+      {
+        markdownSurfaces: [
+          {
+            path: 'docs/intro.md',
+            locale: 'en-US',
+            pairKey: 'intro',
+            content: '<!-- glossary:block id=x -->\nUse envelope encryption to protect data.\n<!-- /glossary:block -->',
+          },
+          {
+            path: 'docs/zh/intro.md',
+            locale: 'zh-CN',
+            pairKey: 'intro',
+            content: '<!-- glossary:block id=x -->\n使用加密来保护数据。\n<!-- /glossary:block -->',
+          },
+        ],
+      },
+      { glossary, strict: true },
+    );
+    const parity = result.issues.find(
+      (i) => i.rule === 'term-mention-parity' && i.termId === 'envelope-encryption',
+    );
+    expect(parity).toBeDefined();
+    expect(parity!.locale).toBe('zh-CN');
+  });
+});
+
 describe('scan — cross-locale term-mention parity', () => {
   it('flags missing zh translation when en mentions the term', () => {
     const result = scan(

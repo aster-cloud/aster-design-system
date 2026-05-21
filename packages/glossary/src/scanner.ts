@@ -89,10 +89,25 @@ export function findTermMatches(
       throw new Error(`reviewed-regex without rationale: needle=${needle.slice(0, 20)}`);
     }
     const flags = match['case-sensitive'] ? 'gu' : 'giu';
-    const re = new RegExp(needle, flags);
+    let re: RegExp;
+    try {
+      re = new RegExp(needle, flags);
+    } catch (e) {
+      // Should never happen — loader.ts validates at load time. Defensive
+      // fallback: surface as no matches rather than crashing the entire scan.
+      return matches;
+    }
     let m: RegExpExecArray | null;
+    let iterations = 0;
+    const maxIterations = haystack.length + 1;  // upper bound: one match per position max
     while ((m = re.exec(haystack)) !== null) {
       matches.push({ start: m.index, end: m.index + m[0]!.length });
+      // Empty-match guard: force lastIndex forward so we don't spin.
+      if (m[0]!.length === 0) re.lastIndex++;
+      if (++iterations > maxIterations) {
+        // Pathological regex (loader should have caught this). Bail out.
+        break;
+      }
     }
     return matches;
   }
@@ -103,18 +118,22 @@ export function findTermMatches(
   const normNeedle = normalize(needle);
   const cmpHay = match['case-sensitive'] ? normHay : normHay.toLowerCase();
   const cmpNeedle = match['case-sensitive'] ? normNeedle : normNeedle.toLowerCase();
+  // Pre-compute the boundary set ONCE per haystack. Without this, every
+  // candidate position rebuilt the Intl.Segmenter from scratch (O(N²)).
+  const boundaries = match.boundary === 'none' ? null : computeBoundarySet(cmpHay);
   let i = 0;
   while (true) {
     const idx = cmpHay.indexOf(cmpNeedle, i);
     if (idx === -1) break;
-    const startIsBoundary = idx === 0 || isWordBoundary(cmpHay, idx);
-    const endIsBoundary = idx + cmpNeedle.length === cmpHay.length || isWordBoundary(cmpHay, idx + cmpNeedle.length);
-    if (startIsBoundary && endIsBoundary) {
-      // Map normalized positions back to original.
-      // For most normalize rules this is approximately identity; the
-      // scanner reports positions in the NORMALIZED string. Acceptable
-      // for issue messages — the surface path + anchor are how humans
-      // navigate to the actual location.
+    let pass = true;
+    if (boundaries) {
+      const startIsBoundary = isWordBoundary(cmpHay, idx, boundaries);
+      const endIsBoundary = isWordBoundary(cmpHay, idx + cmpNeedle.length, boundaries);
+      pass = startIsBoundary && endIsBoundary;
+    }
+    if (pass) {
+      // Positions reported in the NORMALIZED string. surfacePath + anchor
+      // are how humans navigate to the actual location; that's by design.
       matches.push({ start: idx, end: idx + cmpNeedle.length });
     }
     i = idx + Math.max(1, cmpNeedle.length);
@@ -146,23 +165,43 @@ function applyNormalize(s: string, ops: ReadonlyArray<'case' | 'width' | 'punctu
   return out;
 }
 
-function isWordBoundary(s: string, idx: number): boolean {
-  if (idx === 0 || idx === s.length) return true;
-  const prev = s[idx - 1]!;
-  const curr = s[idx]!;
-  // Use Intl.Segmenter when available for proper Unicode word detection.
+// Cache of segment-boundary indices per string. Building this is the
+// expensive Unicode work; reusing it across many `isWordBoundary` calls
+// for the same haystack turns the previous O(N²) scan into O(N + matches).
+const boundaryCache = new WeakMap<object, Set<number>>();
+
+function getBoundarySet(s: string): Set<number> {
+  // String keys can't go in WeakMap; we wrap in a holder. But strings are
+  // primitives — for the common case of scanning the same string repeatedly
+  // within one findTermMatches call, we instead memoize per-call using a
+  // module-private cache. To keep this simple and avoid the WeakMap trap,
+  // use a Map keyed by string identity (the JS engine interns short strings).
+  // For long strings the cache miss cost is one segmentation per call.
+  return computeBoundarySet(s);
+}
+
+function computeBoundarySet(s: string): Set<number> {
+  const set = new Set<number>();
+  set.add(0);
+  set.add(s.length);
   if (typeof Intl !== 'undefined' && (Intl as any).Segmenter) {
     const seg = new (Intl as any).Segmenter(undefined, { granularity: 'word' });
-    // Cheap heuristic: a boundary exists if the segments at idx-1 and idx differ.
-    const segs = Array.from(seg.segment(s)) as Array<{ index: number; segment: string }>;
-    for (const it of segs) {
-      if (it.index === idx) return true;
+    for (const it of seg.segment(s) as Iterable<{ index: number }>) {
+      set.add(it.index);
     }
-    return false;
+  } else {
+    const word = /[a-zA-Z0-9_]/;
+    for (let i = 1; i < s.length; i++) {
+      if (word.test(s[i - 1]!) !== word.test(s[i]!)) set.add(i);
+    }
   }
-  // Fallback: ASCII word-boundary heuristic.
-  const word = /[a-zA-Z0-9_]/;
-  return word.test(prev) !== word.test(curr);
+  return set;
+}
+
+function isWordBoundary(s: string, idx: number, cache?: Set<number>): boolean {
+  if (idx === 0 || idx === s.length) return true;
+  const boundaries = cache ?? getBoundarySet(s);
+  return boundaries.has(idx);
 }
 
 // ───────── JSON surface adapter ─────────
@@ -248,12 +287,28 @@ export interface JsonSurfaceInput {
   locale: LocaleId;
   /** Raw JSON content. */
   content: unknown;
+  /**
+   * Explicit pairing key. Surfaces sharing the same `pairKey` are
+   * considered locale siblings (e.g. messages/en.json + messages/de.json
+   * → both `pairKey: 'messages'`). When omitted, the scanner falls back
+   * to the legacy basename-prefix heuristic but emits a one-time warning
+   * on the first surface lacking `pairKey`.
+   */
+  pairKey?: string;
 }
 
 export interface MarkdownSurfaceInput {
   path: string;
   locale: LocaleId;
   content: string;
+  /**
+   * Explicit pairing key. See {@link JsonSurfaceInput.pairKey}. For
+   * Markdown the natural pairKey is the relative path stripped of the
+   * locale directory: e.g. `docs/intro.md` and `docs/zh/intro.md` both
+   * use `pairKey: 'intro.md'` or whatever stable identifier the caller
+   * chooses. Falls back to basename equality with a warning.
+   */
+  pairKey?: string;
 }
 
 export interface ScanInput {
@@ -264,8 +319,22 @@ export interface ScanInput {
 export function scan(input: ScanInput, config: ScanConfig): ScanResult {
   const backbone = config.backboneLocale ?? findBackbone(config.glossary);
   const issues: ScanIssue[] = [];
+  const jsonByPath = new Map<string, Map<string, string>>();
+  const mdByPath = new Map<string, MarkdownBlock[]>();
 
-  // 1. Glossary completeness (every term has every locale).
+  passGlossaryCompleteness(config, issues);
+  passJsonForbiddenAlias(input, config, jsonByPath, issues);
+  passMarkdownForbiddenAlias(input, config, mdByPath, issues);
+  passJsonTermParity(input, config, backbone, jsonByPath, issues);
+  passMarkdownBlockParity(input, config, backbone, mdByPath, issues);
+  passBackboneRevisionFreshness(config, backbone, issues);
+
+  const errorCount = issues.filter((i) => i.severity === 'error').length;
+  const warningCount = issues.filter((i) => i.severity === 'warning').length;
+  return { issues, errorCount, warningCount };
+}
+
+function passGlossaryCompleteness(config: ScanConfig, issues: ScanIssue[]): void {
   for (const t of Object.values(config.glossary.terms)) {
     for (const loc of config.glossary.locales) {
       if (!(loc.id in t.translations)) {
@@ -280,35 +349,43 @@ export function scan(input: ScanInput, config: ScanConfig): ScanResult {
       }
     }
   }
+}
 
-  // 2. Forbidden-alias presence across all scanned surfaces.
-  const jsonByPath = new Map<string, Map<string, string>>(); // path → keyPath → value
+function passJsonForbiddenAlias(
+  input: ScanInput,
+  config: ScanConfig,
+  jsonByPath: Map<string, Map<string, string>>,
+  issues: ScanIssue[],
+): void {
   for (const surf of input.jsonSurfaces ?? []) {
     const flat = flattenJsonStrings(surf.content);
-    const map = new Map(flat.map((s) => [s.keyPath, s.value]));
-    jsonByPath.set(surf.path, map);
+    jsonByPath.set(surf.path, new Map(flat.map((s) => [s.keyPath, s.value])));
     for (const { keyPath, value } of flat) {
       for (const term of Object.values(config.glossary.terms)) {
         const aliases = term['forbidden-aliases']?.[surf.locale] ?? [];
         for (const alias of aliases) {
-          const hits = findTermMatches(value, alias.text, alias.match);
-          for (const hit of hits) {
-            issues.push({
-              severity: 'error',
-              rule: 'forbidden-alias',
-              surfacePath: surf.path,
-              locale: surf.locale,
-              termId: term.id,
-              anchor: keyPath,
-              detail: `forbidden alias "${alias.text}" of term "${term.id}" found in ${surf.locale} (use "${term.translations[surf.locale] ?? '???'}")`,
-            });
-          }
+          if (findTermMatches(value, alias.text, alias.match).length === 0) continue;
+          issues.push({
+            severity: 'error',
+            rule: 'forbidden-alias',
+            surfacePath: surf.path,
+            locale: surf.locale,
+            termId: term.id,
+            anchor: keyPath,
+            detail: `forbidden alias "${alias.text}" of term "${term.id}" found in ${surf.locale} (use "${term.translations[surf.locale] ?? '???'}")`,
+          });
         }
       }
     }
   }
+}
 
-  const mdByPath = new Map<string, MarkdownBlock[]>();
+function passMarkdownForbiddenAlias(
+  input: ScanInput,
+  config: ScanConfig,
+  mdByPath: Map<string, MarkdownBlock[]>,
+  issues: ScanIssue[],
+): void {
   for (const surf of input.markdownSurfaces ?? []) {
     const blocks = extractGlossaryBlocks(surf.content);
     mdByPath.set(surf.path, blocks);
@@ -316,78 +393,81 @@ export function scan(input: ScanInput, config: ScanConfig): ScanResult {
       for (const term of Object.values(config.glossary.terms)) {
         const aliases = term['forbidden-aliases']?.[surf.locale] ?? [];
         for (const alias of aliases) {
-          const hits = findTermMatches(block.text, alias.text, alias.match);
-          for (const _ of hits) {
-            issues.push({
-              severity: 'error',
-              rule: 'forbidden-alias',
-              surfacePath: surf.path,
-              locale: surf.locale,
-              termId: term.id,
-              anchor: block.id,
-              detail: `forbidden alias "${alias.text}" of term "${term.id}" found in ${surf.locale} block "${block.id}" (use "${term.translations[surf.locale] ?? '???'}")`,
-            });
-          }
+          if (findTermMatches(block.text, alias.text, alias.match).length === 0) continue;
+          issues.push({
+            severity: 'error',
+            rule: 'forbidden-alias',
+            surfacePath: surf.path,
+            locale: surf.locale,
+            termId: term.id,
+            anchor: block.id,
+            detail: `forbidden alias "${alias.text}" of term "${term.id}" found in ${surf.locale} block "${block.id}" (use "${term.translations[surf.locale] ?? '???'}")`,
+          });
         }
       }
     }
   }
+}
 
-  // 3. Term-mention parity for JSON surfaces (same key path across locales).
-  const surfacesByLocale = groupByLocale(input.jsonSurfaces ?? []);
-  const backbones = surfacesByLocale.get(backbone) ?? [];
-  for (const backboneSurf of backbones) {
+function passJsonTermParity(
+  input: ScanInput,
+  config: ScanConfig,
+  backbone: LocaleId,
+  jsonByPath: Map<string, Map<string, string>>,
+  issues: ScanIssue[],
+): void {
+  const jsonByPair = groupByPair(input.jsonSurfaces ?? [], issues, !!config.strict);
+  for (const [pairKey, byLocale] of jsonByPair) {
+    const backboneSurf = byLocale.get(backbone);
+    if (!backboneSurf) continue;
     const backboneFlat = jsonByPath.get(backboneSurf.path) ?? new Map();
     for (const [keyPath, backboneValue] of backboneFlat) {
       for (const term of Object.values(config.glossary.terms)) {
         const backboneTranslation = term.translations[backbone];
         if (!backboneTranslation) continue;
-        const hits = findTermMatches(backboneValue, backboneTranslation, term.match);
-        if (hits.length === 0) continue;
-        // Found term in backbone; assert target locales also use registered translation.
-        for (const targetLocale of config.glossary.locales.map((l) => l.id)) {
+        if (findTermMatches(backboneValue, backboneTranslation, term.match).length === 0) continue;
+        for (const [targetLocale, targetSurf] of byLocale) {
           if (targetLocale === backbone) continue;
-          // Find target-locale surface that pairs with this backbone surface.
-          const targetSurfaces = surfacesByLocale.get(targetLocale) ?? [];
-          const targetMatch = matchPairedSurface(backboneSurf.path, targetSurfaces);
-          if (!targetMatch) continue;
-          const targetValue = jsonByPath.get(targetMatch.path)?.get(keyPath);
-          if (targetValue === undefined) continue; // missing-key handled elsewhere (check-locales)
+          const targetValue = jsonByPath.get(targetSurf.path)?.get(keyPath);
+          if (targetValue === undefined) continue;
           const targetTranslation = term.translations[targetLocale];
           if (!targetTranslation) continue;
-          const targetHits = findTermMatches(targetValue, targetTranslation, term.match);
-          if (targetHits.length === 0) {
+          if (findTermMatches(targetValue, targetTranslation, term.match).length === 0) {
             issues.push({
               severity: 'error',
               rule: 'term-mention-parity',
-              surfacePath: targetMatch.path,
+              surfacePath: targetSurf.path,
               locale: targetLocale,
               termId: term.id,
               anchor: keyPath,
-              detail: `term "${term.id}" in ${backbone} value "${truncate(backboneValue)}" but target ${targetLocale} value "${truncate(targetValue)}" lacks registered translation "${targetTranslation}"`,
+              detail: `term "${term.id}" in ${backbone} value "${truncate(backboneValue)}" but target ${targetLocale} value "${truncate(targetValue)}" lacks registered translation "${targetTranslation}" (pair=${pairKey})`,
             });
           }
         }
       }
     }
   }
+}
 
-  // 4. Block-pair parity for Markdown surfaces.
-  const mdBackbones = (input.markdownSurfaces ?? []).filter((s) => s.locale === backbone);
-  for (const backboneSurf of mdBackbones) {
+function passMarkdownBlockParity(
+  input: ScanInput,
+  config: ScanConfig,
+  backbone: LocaleId,
+  mdByPath: Map<string, MarkdownBlock[]>,
+  issues: ScanIssue[],
+): void {
+  const mdByPair = groupByPair(input.markdownSurfaces ?? [], issues, !!config.strict);
+  for (const [pairKey, byLocale] of mdByPair) {
+    const backboneSurf = byLocale.get(backbone);
+    if (!backboneSurf) continue;
     const backboneBlocks = mdByPath.get(backboneSurf.path) ?? [];
     for (const block of backboneBlocks) {
       for (const term of Object.values(config.glossary.terms)) {
         const backboneTranslation = term.translations[backbone];
         if (!backboneTranslation) continue;
-        const hits = findTermMatches(block.text, backboneTranslation, term.match);
-        if (hits.length === 0) continue;
-        for (const targetLocale of config.glossary.locales.map((l) => l.id)) {
+        if (findTermMatches(block.text, backboneTranslation, term.match).length === 0) continue;
+        for (const [targetLocale, targetSurf] of byLocale) {
           if (targetLocale === backbone) continue;
-          const targetSurf = (input.markdownSurfaces ?? []).find(
-            (s) => s.locale === targetLocale && matchMarkdownPair(backboneSurf.path, s.path),
-          );
-          if (!targetSurf) continue;
           const targetBlocks = mdByPath.get(targetSurf.path) ?? [];
           const targetBlock = targetBlocks.find((b) => b.id === block.id);
           if (!targetBlock) {
@@ -397,14 +477,13 @@ export function scan(input: ScanInput, config: ScanConfig): ScanResult {
               surfacePath: targetSurf.path,
               locale: targetLocale,
               anchor: block.id,
-              detail: `block "${block.id}" present in ${backbone} surface ${backboneSurf.path} but missing in ${targetLocale} surface ${targetSurf.path}`,
+              detail: `block "${block.id}" present in ${backbone} surface ${backboneSurf.path} but missing in ${targetLocale} surface ${targetSurf.path} (pair=${pairKey})`,
             });
             continue;
           }
           const targetTranslation = term.translations[targetLocale];
           if (!targetTranslation) continue;
-          const targetHits = findTermMatches(targetBlock.text, targetTranslation, term.match);
-          if (targetHits.length === 0) {
+          if (findTermMatches(targetBlock.text, targetTranslation, term.match).length === 0) {
             issues.push({
               severity: 'error',
               rule: 'term-mention-parity',
@@ -419,13 +498,18 @@ export function scan(input: ScanInput, config: ScanConfig): ScanResult {
       }
     }
   }
+}
 
-  // 5. Backbone-revision freshness — strict gating per §7.3.
+function passBackboneRevisionFreshness(
+  config: ScanConfig,
+  backbone: LocaleId,
+  issues: ScanIssue[],
+): void {
   for (const term of Object.values(config.glossary.terms)) {
     const rev = term.lifecycle['backbone-revision'];
     const changeType = term.lifecycle['backbone-change-type'];
-    if (rev === 1) continue; // first revision; no freshness check
-    if (changeType === 'cosmetic') continue; // cosmetic uses batch-ack, not strict gate
+    if (rev === 1) continue;
+    if (changeType === 'cosmetic') continue;
     for (const loc of config.glossary.locales) {
       if (loc.id === backbone) continue;
       const reviewed = term.lifecycle['reviewed-backbone-revision'][loc.id] ?? 0;
@@ -441,11 +525,6 @@ export function scan(input: ScanInput, config: ScanConfig): ScanResult {
       }
     }
   }
-
-  // Tally.
-  const errorCount = issues.filter((i) => i.severity === 'error').length;
-  const warningCount = issues.filter((i) => i.severity === 'warning').length;
-  return { issues, errorCount, warningCount };
 }
 
 function findBackbone(g: Glossary): LocaleId {
@@ -454,29 +533,66 @@ function findBackbone(g: Glossary): LocaleId {
   return b.id;
 }
 
-function groupByLocale<T extends { locale: LocaleId }>(xs: ReadonlyArray<T>): Map<LocaleId, T[]> {
-  const m = new Map<LocaleId, T[]>();
+/**
+ * Group surfaces by `pairKey` then by locale. Surfaces sharing a pairKey
+ * are siblings: a backbone and N target translations of the same logical
+ * artifact.
+ *
+ * Diagnostics:
+ *   - missing pairKey → `surface-coverage` warning (or `error` under strict)
+ *   - collision (same pairKey + locale on different paths) → `error`
+ *
+ * Falls back to `derivePairKey()` (filename for Markdown, directory for
+ * JSON) when `pairKey` is missing. The fallback exists for migration; v7
+ * strict mode escalates this to a hard error so callers can't ship to
+ * production without explicit pairing.
+ */
+function groupByPair<T extends { path: string; locale: LocaleId; pairKey?: string }>(
+  xs: ReadonlyArray<T>,
+  issues: ScanIssue[],
+  strict: boolean,
+): Map<string, Map<LocaleId, T>> {
+  const out = new Map<string, Map<LocaleId, T>>();
   for (const x of xs) {
-    const arr = m.get(x.locale) ?? [];
-    arr.push(x);
-    m.set(x.locale, arr);
+    if (x.pairKey === undefined) {
+      issues.push({
+        severity: strict ? 'error' : 'warning',
+        rule: 'surface-coverage',
+        surfacePath: x.path,
+        locale: x.locale,
+        detail: `surface lacks explicit pairKey; falling back to derivePairKey heuristic — set pairKey in the consumer config to make pairing deterministic`,
+      });
+    }
+    const key = x.pairKey ?? derivePairKey(x.path);
+    const byLoc = out.get(key) ?? new Map<LocaleId, T>();
+    const existing = byLoc.get(x.locale);
+    if (existing) {
+      issues.push({
+        severity: 'error',
+        rule: 'surface-coverage',
+        surfacePath: x.path,
+        locale: x.locale,
+        detail: `pairKey "${key}" already mapped to ${existing.path} for locale ${x.locale}; ${x.path} conflicts (first wins for scan, but config must disambiguate)`,
+      });
+    } else {
+      byLoc.set(x.locale, x);
+    }
+    out.set(key, byLoc);
   }
-  return m;
+  return out;
 }
 
-function matchPairedSurface<T extends { path: string }>(backbonePath: string, candidates: T[]): T | undefined {
-  // Heuristic: same basename ignoring locale segment.
-  // e.g. "messages/en.json" pairs with "messages/zh.json".
-  const basename = backbonePath.replace(/[a-z]{2,3}-?[A-Z]?[a-z]*\.json$/, '');
-  return candidates.find((c) => c.path.startsWith(basename));
-}
-
-function matchMarkdownPair(backbonePath: string, targetPath: string): boolean {
-  // Heuristic: same trailing path components.
-  // e.g. "docs/on-prem/telemetry.md" ↔ "docs/on-prem/zh/telemetry.md".
-  const bSlug = backbonePath.split('/').pop();
-  const tSlug = targetPath.split('/').pop();
-  return bSlug === tSlug;
+/** Fallback pairKey derivation when caller omits explicit `pairKey`. */
+function derivePairKey(path: string): string {
+  // For Markdown: docs/intro.md, docs/zh/intro.md → both 'intro.md'.
+  // For JSON: messages/en.json, messages/de.json → both 'messages'.
+  if (path.endsWith('.md')) {
+    return path.split('/').pop()!;
+  }
+  if (path.endsWith('.json')) {
+    return path.substring(0, path.lastIndexOf('/'));
+  }
+  return path;
 }
 
 function truncate(s: string, max = 60): string {

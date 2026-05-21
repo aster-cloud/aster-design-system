@@ -23,12 +23,34 @@ import { parse as parseYaml } from 'yaml';
 const here = dirname(fileURLToPath(import.meta.url));
 const designSystemRoot = resolvePath(here, '..', '..', '..');
 
-function loadConsumers() {
+async function loadConsumers() {
   const path = join(designSystemRoot, '.glossary', 'consumers.yaml');
   if (!existsSync(path)) {
     throw new Error('[matrix] .glossary/consumers.yaml not found');
   }
-  return parseYaml(readFileSync(path, 'utf8'));
+  const raw = parseYaml(readFileSync(path, 'utf8'));
+  // Validate via the canonical Zod schema so a malformed consumers file
+  // fails fast with a precise error path instead of crashing downstream.
+  const schemaModule = await import(
+    join(designSystemRoot, 'packages', 'glossary', 'dist', 'schema.js')
+  ).catch(() => null);
+  if (schemaModule && schemaModule.ConsumersFileSchema) {
+    const parsed = schemaModule.ConsumersFileSchema.safeParse(raw);
+    if (!parsed.success) {
+      throw new Error(
+        `[matrix] .glossary/consumers.yaml failed schema validation:\n  ${parsed.error.issues
+          .map((i) => `${i.path.join('.')}: ${i.message}`)
+          .join('\n  ')}`,
+      );
+    }
+    return parsed.data;
+  }
+  // G7 acceptance artifact MUST be schema-validated. Hard fail rather than
+  // silently degrading — this is the official-tier coverage gate.
+  throw new Error(
+    '[matrix] @aster-cloud/glossary dist/schema.js not found. ' +
+    'Run `pnpm build` in aster-design-system/packages/glossary before invoking the matrix generator.',
+  );
 }
 
 function loadLocales() {
@@ -65,7 +87,7 @@ function fetchConfigLocal(consumer) {
 // in this package by default (would add ~5MB to npm install for a
 // matrix tool nobody uses outside G7). When run with credentials,
 // dynamic import + delegate.
-async function fetchConfigViaApp(consumer) {
+async function fetchConfigViaApp(consumer, retryCount = 0) {
   let createAppAuth, Octokit;
   try {
     ({ createAppAuth } = await import('@octokit/auth-app'));
@@ -94,10 +116,13 @@ async function fetchConfigViaApp(consumer) {
     return parseYaml(Buffer.from(data.content, 'base64').toString());
   } catch (err) {
     if (err.status === 404) return null;
+    if (err.status === 403 && retryCount < 3) {
+      // rate-limit; exponential backoff up to 3 retries.
+      await new Promise((r) => setTimeout(r, 5000 * (retryCount + 1)));
+      return fetchConfigViaApp(consumer, retryCount + 1);
+    }
     if (err.status === 403) {
-      // rate-limit; back off
-      await new Promise((r) => setTimeout(r, 5000));
-      return fetchConfigViaApp(consumer);
+      throw new Error(`[matrix] persistent 403 from GitHub App for ${consumer.org}/${consumer.repo} after 3 retries`);
     }
     throw err;
   }
@@ -181,7 +206,7 @@ async function main() {
     console.error('[matrix] local-fs fallback (no GLOSSARY_BOT_* env vars). Output is DEV-ONLY.');
   }
 
-  const consumersDoc = loadConsumers();
+  const consumersDoc = await loadConsumers();
   const localesDoc = loadLocales();
   const knownLocales = new Set(localesDoc.locales.map((l) => l.id));
   const allLocales = new Set([...knownLocales, localeArg]);

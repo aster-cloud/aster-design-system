@@ -28,8 +28,10 @@ import {
   sha256Hex,
 } from '../../src/manifest-writer.js';
 import { createDenylist, appendDenylistEntry } from '../../src/denylist-writer.js';
-import { fetchAndVerifyManifest, ManifestStateError } from '../../src/manifest.js';
-import { fetchDenylist, assertVersionNotDenylisted, DenylistedVersionError } from '../../src/denylist.js';
+import { fetchAndVerifyManifest, ManifestStateError, ManifestSignatureError } from '../../src/manifest.js';
+import { fetchDenylist, assertVersionNotDenylisted, DenylistedVersionError, DenylistSignatureError } from '../../src/denylist.js';
+
+const STUB_TRUST = { trustedKeysPem: ['STUB'] };
 
 // ─── Test infrastructure ───
 
@@ -171,6 +173,7 @@ describe('manifest verify (G8b consumer)', () => {
       version: '1.0.0',
       sources: [`file://${cdn.dir}/`],
       cacheDir: mkdtempSync(`${tmpdir()}/cache-`),
+      trust: STUB_TRUST,
     })).rejects.toThrow(ManifestStateError);
   });
 
@@ -187,6 +190,7 @@ describe('manifest verify (G8b consumer)', () => {
       version: '1.0.0',
       sources: [`file://${cdn.dir}/`],
       cacheDir: mkdtempSync(`${tmpdir()}/cache-`),
+      trust: STUB_TRUST,
     });
     expect(outcome.state).toBe('fresh');
     expect(outcome.manifest.state).toBe('promoted');
@@ -206,6 +210,7 @@ describe('manifest verify (G8b consumer)', () => {
       version: '1.0.1',
       sources: [`file://${cdn.dir}/`],
       cacheDir: mkdtempSync(`${tmpdir()}/cache-`),
+      trust: STUB_TRUST,
     })).rejects.toThrow(/manifest version mismatch/);
   });
 });
@@ -227,6 +232,7 @@ describe('denylist fetch (G8b consumer)', () => {
     const outcome = await fetchDenylist({
       sources: [`file://${cdn.dir}/`],
       cacheDir: mkdtempSync(`${tmpdir()}/cache-`),
+      trust: STUB_TRUST,
     });
     expect(outcome.state).toBe('fresh');
     if (outcome.state === 'fresh') {
@@ -245,6 +251,7 @@ describe('denylist fetch (G8b consumer)', () => {
     const outcome = await fetchDenylist({
       sources: [`file://${cdn.dir}/`, `file://${github.dir}/`],
       cacheDir: mkdtempSync(`${tmpdir()}/cache-`),
+      trust: STUB_TRUST,
     });
     expect(outcome.state).toBe('fresh');
   });

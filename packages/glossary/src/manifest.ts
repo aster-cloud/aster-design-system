@@ -14,9 +14,18 @@
 // (public keys shipped with the package). Tampering requires forging
 // GPG; consumers never contact an external keyserver.
 
-import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { existsSync, readFileSync, statSync } from 'node:fs';
+import { join } from 'node:path';
 import { ReleaseManifestSchema, type ReleaseManifest } from './schema.js';
+import { canonicalize, signedProjection } from './manifest-writer.js';
+import {
+  PRODUCTION_TRUST_STORE,
+  isStubTrustStore,
+  verifyEd25519,
+  verifyStub,
+  type TrustStore,
+} from './trust-store.js';
+import { fetchWithRetry, writeCacheAtomic } from './fetch-utils.js';
 
 const MANIFEST_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24h
 
@@ -26,7 +35,9 @@ export interface ManifestFetchOptions {
   /**
    * Ordered list of URL prefixes to try (e.g. ["https://glossary.aster-lang.cloud/releases/",
    * "https://raw.githubusercontent.com/aster-cloud/aster-design-system/main/packages/glossary/releases/"]).
-   * v7 multi-source mandatory: must have ≥ 2 entries for official tier.
+   * Official-tier callers must pass ≥2 entries; the writer-side
+   * coverage-matrix CI gate enforces this — runtime accepts ≥1 to keep
+   * the consumer flexible (e.g. testing with a local file:// source).
    */
   sources: ReadonlyArray<string>;
   /** Cache directory; default `<cwd>/.glossary/cache`. */
@@ -37,6 +48,8 @@ export interface ManifestFetchOptions {
   maxRetries?: number;
   /** Override clock for testing. */
   nowMs?: () => number;
+  /** Trust store used to verify the signature. Defaults to PRODUCTION_TRUST_STORE. */
+  trust?: TrustStore;
 }
 
 export type ManifestVerifyOutcome =
@@ -60,6 +73,32 @@ export class ManifestStateError extends Error {
   }
 }
 
+export class ManifestSignatureError extends Error {
+  constructor(public readonly version: string, public readonly reason: string) {
+    super(`[glossary/manifest] signature verification failed for ${version}: ${reason}`);
+    this.name = 'ManifestSignatureError';
+  }
+}
+
+function assertManifestSignature(
+  manifest: ReleaseManifest,
+  version: string,
+  trust: TrustStore,
+): void {
+  const { signature, ...unsigned } = manifest;
+  const payload = canonicalize(signedProjection(unsigned));
+  if (isStubTrustStore(trust)) {
+    if (!verifyStub(payload, signature)) {
+      throw new ManifestSignatureError(version, 'stub signature mismatch');
+    }
+    return;
+  }
+  const result = verifyEd25519(payload, signature, trust);
+  if (!result.ok) {
+    throw new ManifestSignatureError(version, result.reason ?? 'unknown');
+  }
+}
+
 export async function fetchAndVerifyManifest(
   opts: ManifestFetchOptions,
 ): Promise<ManifestVerifyOutcome> {
@@ -69,6 +108,7 @@ export async function fetchAndVerifyManifest(
   const now = (opts.nowMs ?? Date.now)();
   const cacheDir = opts.cacheDir ?? join(process.cwd(), '.glossary', 'cache');
   const cacheFile = join(cacheDir, `manifest-${opts.version}.json`);
+  const trust = opts.trust ?? PRODUCTION_TRUST_STORE;
 
   // Try each source in order.
   const errors: string[] = [];
@@ -80,15 +120,16 @@ export async function fetchAndVerifyManifest(
         maxRetries: opts.maxRetries ?? 3,
       });
       const manifest = ReleaseManifestSchema.parse(JSON.parse(fetched));
-      // assertManifestState throws ManifestStateError if not `promoted` — those
-      // errors are CONTENT errors, not network errors. Re-throw immediately
-      // instead of swallowing and trying the next source; every source will
-      // serve the same content and we want to surface "not promoted" loudly.
+      // Order: signature → state. State error and signature error are both
+      // CONTENT errors; either should short-circuit the source loop because
+      // every mirror serves the same content.
+      assertManifestSignature(manifest, opts.version, trust);
       assertManifestState(manifest, opts.version);
-      writeCache(cacheFile, fetched, now);
+      writeCacheAtomic(cacheFile, fetched);
       return { state: 'fresh', manifest, source: url };
     } catch (err) {
       if (err instanceof ManifestStateError) throw err;
+      if (err instanceof ManifestSignatureError) throw err;
       errors.push(`${url}: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
@@ -98,6 +139,7 @@ export async function fetchAndVerifyManifest(
     const cachedAt = statSync(cacheFile).mtimeMs;
     if (now - cachedAt <= MANIFEST_CACHE_TTL_MS) {
       const manifest = ReleaseManifestSchema.parse(JSON.parse(readFileSync(cacheFile, 'utf8')));
+      assertManifestSignature(manifest, opts.version, trust);
       assertManifestState(manifest, opts.version);
       return { state: 'cached-fresh', manifest, cachedAt };
     }
@@ -123,45 +165,5 @@ function assertManifestState(manifest: ReleaseManifest, version: string): void {
   }
 }
 
-async function fetchWithRetry(
-  url: string,
-  opts: { timeoutMs: number; maxRetries: number },
-): Promise<string> {
-  // Test seam: file:// URLs are read directly from the filesystem so
-  // unit tests don't need to spin up an HTTP server.
-  if (url.startsWith('file://')) {
-    const { readFileSync, existsSync } = await import('node:fs');
-    const path = url.slice('file://'.length);
-    if (!existsSync(path)) throw new Error(`HTTP 404 (file not found): ${path}`);
-    return readFileSync(path, 'utf8');
-  }
-
-  let lastError: unknown;
-  for (let attempt = 0; attempt <= opts.maxRetries; attempt++) {
-    if (attempt > 0) {
-      await new Promise((r) => setTimeout(r, 100 * 2 ** attempt));
-    }
-    try {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), opts.timeoutMs);
-      try {
-        const res = await fetch(url, { signal: controller.signal });
-        if (!res.ok) {
-          lastError = new Error(`HTTP ${res.status}`);
-          continue;
-        }
-        return await res.text();
-      } finally {
-        clearTimeout(timer);
-      }
-    } catch (err) {
-      lastError = err;
-    }
-  }
-  throw lastError instanceof Error ? lastError : new Error(String(lastError));
-}
-
-function writeCache(path: string, body: string, _nowMs: number): void {
-  mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, body, 'utf8');
-}
+// fetchWithRetry and writeCacheAtomic now live in fetch-utils.ts (shared
+// with denylist.ts). See that file for the implementation.
