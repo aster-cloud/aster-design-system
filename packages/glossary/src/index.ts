@@ -17,4 +17,12 @@ export const glossary: Glossary = loadGlossary();
 
 // Re-exports for convenience.
 export * from './schema.js';
-export { loadGlossary, loadFromExport, GlossaryValidationError } from './loader.js';
+export { loadGlossary, loadFromExport, validateGlossaryExportShape, GlossaryValidationError } from './loader.js';
+export {
+  parseLocaleTag,
+  matchLocaleSegment,
+  localeFromPathSegment,
+  stripLocaleSegment,
+  shortLocaleTokens,
+  type ParsedLocale,
+} from './locale-utils.js';

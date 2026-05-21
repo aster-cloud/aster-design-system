@@ -40,6 +40,10 @@
       "types": "./dist/schema.d.ts",
       "default": "./dist/schema.js"
     },
+    "./locale-utils": {
+      "types": "./dist/locale-utils.d.ts",
+      "default": "./dist/locale-utils.js"
+    },
     "./export-json": "./dist/glossary.export.json",
     "./terms": "./src/terms/",
     "./locales": "./src/locales.yaml",

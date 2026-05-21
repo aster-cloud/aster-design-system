@@ -217,6 +217,34 @@ export function loadFromExport(exportPath: string): Glossary {
   return Object.freeze(parsed.data);
 }
 
+/**
+ * Cheap structural guard for `glossary.export.json` used by consumers that
+ * receive the JSON via dynamic import and want a contract diagnostic rather
+ * than a downstream `TypeError`. Throws `GlossaryValidationError` with a
+ * specific reason; does NOT go through the full Zod schema (consumers
+ * deliberately keep the import surface small to avoid bundling zod).
+ */
+export function validateGlossaryExportShape(raw: unknown, source: string): void {
+  if (!raw || typeof raw !== 'object') {
+    throw new GlossaryValidationError(`glossary.export.json at ${source} is not an object`);
+  }
+  const o = raw as Record<string, unknown>;
+  if (typeof o['localesVersion'] !== 'number') {
+    throw new GlossaryValidationError(`glossary.export.json at ${source} missing numeric localesVersion`);
+  }
+  if (!Array.isArray(o['locales'])) {
+    throw new GlossaryValidationError(`glossary.export.json at ${source} missing locales array`);
+  }
+  for (const l of o['locales'] as unknown[]) {
+    if (!l || typeof l !== 'object' || typeof (l as Record<string, unknown>)['id'] !== 'string') {
+      throw new GlossaryValidationError(`glossary.export.json at ${source} has a locale entry without a string id`);
+    }
+  }
+  if (!o['terms'] || typeof o['terms'] !== 'object') {
+    throw new GlossaryValidationError(`glossary.export.json at ${source} missing terms object`);
+  }
+}
+
 function normalizeForCompare(s: string): string {
   return s.normalize('NFC').toLowerCase().replace(/\s+/g, ' ').trim();
 }
