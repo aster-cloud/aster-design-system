@@ -30,6 +30,12 @@ jobs:
     permissions:
       contents: read
       deployments: write
+    # Lift Cloudflare credentials to job-level env so subsequent step
+    # `if:` expressions can reference env.X — step-level env is not
+    # available to that step's own `if:` (chicken-and-egg).
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
       - uses: actions/checkout@v6
 
@@ -64,20 +70,13 @@ jobs:
       # existing-wrangler check succeeds and skips its install path.
       - name: Install wrangler
         if: env.CLOUDFLARE_API_TOKEN != ''
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: npm install -g wrangler@4
 
       - name: Deploy to Cloudflare Pages
-        # The aster-design-system repo doesn't currently have Cloudflare
-        # secrets configured (CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID).
-        # Skip the deploy when they're missing instead of failing the
-        # workflow with "Not logged in" — Storybook build still gets
-        # produced as a workflow artifact for local download.
+        # Skip the deploy when secrets are missing instead of failing
+        # the workflow with "Not logged in". Storybook build still
+        # uploads as a workflow artifact for local download.
         if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -88,11 +87,8 @@ jobs:
           # action can create it on first push.
           command: pages deploy apps/storybook/storybook-static --project-name aster-design-system --branch ${{ github.head_ref || github.ref_name }}
 
-      - name: Note: Cloudflare deploy skipped (secrets not configured)
+      - name: Warn when Cloudflare deploy skipped
         if: env.CLOUDFLARE_API_TOKEN == '' || env.CLOUDFLARE_ACCOUNT_ID == ''
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           echo "::warning::CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID not set on this repo;"
           echo "::warning::Storybook built successfully but was not deployed to Cloudflare Pages."
