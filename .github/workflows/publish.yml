@@ -24,6 +24,12 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      # Provenance attestations (publishConfig.provenance: true on
+      # glossary/package.json) require OIDC token-write so npm can mint
+      # a build attestation from GitHub Actions identity. tokens/ui
+      # don't enable provenance yet but giving the job write access
+      # here is harmless — it's only used when the package opts in.
+      id-token: write
     steps:
       - uses: actions/checkout@v6
 
