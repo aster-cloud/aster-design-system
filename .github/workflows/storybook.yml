@@ -70,7 +70,14 @@ jobs:
       # existing-wrangler check succeeds and skips its install path.
       - name: Install wrangler
         if: env.CLOUDFLARE_API_TOKEN != ''
-        run: npm install -g wrangler@4
+        # Pin wrangler v3. v4's `pages deploy` calls /memberships before
+        # the actual deploy, which requires User:Read on the API token.
+        # Existing CLOUDFLARE_API_TOKEN only has Pages:Edit (which is
+        # what the Cloudflare docs recommend for pages-only deploys).
+        # v3 trusted CLOUDFLARE_ACCOUNT_ID and skipped the membership
+        # lookup — we keep that behaviour pinned until the token is
+        # updated with User:Read scope.
+        run: npm install -g wrangler@3
 
       - name: Deploy to Cloudflare Pages
         # Skip the deploy when secrets are missing instead of failing
@@ -81,6 +88,10 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # Pinned to v3 — see "Install wrangler" step for rationale.
+          # When the API token is upgraded with User:Read scope, drop
+          # this pin and let the action default to wrangler v4.
+          wranglerVersion: "3"
           # First run will create the Pages project; subsequent runs
           # update it. The project must already exist on the account
           # OR the API token must have Pages:Edit permission so the
