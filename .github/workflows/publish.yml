@@ -87,3 +87,25 @@ jobs:
           fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # @aster-cloud/glossary — single source of truth for cross-locale
+      # terminology + the scanner library used by consumer scripts
+      # (aster-cloud check-glossary, aster-lang-dev check-locale-parity).
+      # Was previously consumed via sibling-checkout path; promoting to
+      # an npm dependency removes that CI-time path coupling.
+      - name: Publish @aster-cloud/glossary
+        working-directory: packages/glossary
+        shell: bash {0}
+        run: |
+          out=$(pnpm publish --no-git-checks --access=public 2>&1)
+          status=$?
+          echo "$out"
+          if [ $status -ne 0 ]; then
+            if echo "$out" | grep -q "previously published versions"; then
+              echo "glossary@$(node -p "require('./package.json').version") already on registry — skipping"
+              exit 0
+            fi
+            exit $status
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
