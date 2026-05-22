@@ -63,9 +63,21 @@ jobs:
       # `npm install -g wrangler@4` puts it on PATH so the action's
       # existing-wrangler check succeeds and skips its install path.
       - name: Install wrangler
+        if: env.CLOUDFLARE_API_TOKEN != ''
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: npm install -g wrangler@4
 
       - name: Deploy to Cloudflare Pages
+        # The aster-design-system repo doesn't currently have Cloudflare
+        # secrets configured (CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID).
+        # Skip the deploy when they're missing instead of failing the
+        # workflow with "Not logged in" — Storybook build still gets
+        # produced as a workflow artifact for local download.
+        if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -75,3 +87,13 @@ jobs:
           # OR the API token must have Pages:Edit permission so the
           # action can create it on first push.
           command: pages deploy apps/storybook/storybook-static --project-name aster-design-system --branch ${{ github.head_ref || github.ref_name }}
+
+      - name: Note: Cloudflare deploy skipped (secrets not configured)
+        if: env.CLOUDFLARE_API_TOKEN == '' || env.CLOUDFLARE_ACCOUNT_ID == ''
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          echo "::warning::CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID not set on this repo;"
+          echo "::warning::Storybook built successfully but was not deployed to Cloudflare Pages."
+          echo "::warning::Add the secrets at https://github.com/aster-cloud/aster-design-system/settings/secrets/actions"
