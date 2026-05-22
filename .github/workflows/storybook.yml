@@ -70,14 +70,19 @@ jobs:
       # existing-wrangler check succeeds and skips its install path.
       - name: Install wrangler
         if: env.CLOUDFLARE_API_TOKEN != ''
-        # Pin wrangler v3. v4's `pages deploy` calls /memberships before
-        # the actual deploy, which requires User:Read on the API token.
-        # Existing CLOUDFLARE_API_TOKEN only has Pages:Edit (which is
-        # what the Cloudflare docs recommend for pages-only deploys).
-        # v3 trusted CLOUDFLARE_ACCOUNT_ID and skipped the membership
-        # lookup — we keep that behaviour pinned until the token is
-        # updated with User:Read scope.
-        run: npm install -g wrangler@3
+        run: npm install -g wrangler@4
+
+      # `wrangler pages deploy` does NOT auto-create projects (any
+      # wrangler version). First deploy must explicitly create the
+      # project; subsequent runs reuse it. We tolerate "already exists"
+      # so re-runs are idempotent.
+      - name: Ensure Pages project exists
+        if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
+        continue-on-error: true
+        run: |
+          wrangler pages project create aster-design-system \
+            --production-branch main \
+          || echo "Project already exists (or token cannot list — proceeding to deploy anyway)"
 
       - name: Deploy to Cloudflare Pages
         # Skip the deploy when secrets are missing instead of failing
@@ -97,10 +102,9 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          # Pinned to v3 — see "Install wrangler" step for rationale.
-          # When the API token is upgraded with User:Read scope, drop
-          # this pin and let the action default to wrangler v4.
-          wranglerVersion: "3"
+          # Use wrangler v4 (auto-creates missing Pages projects;
+          # /memberships call works now that the token has User:Read).
+          wranglerVersion: "4"
           # First run will create the Pages project; subsequent runs
           # update it. The project must already exist on the account
           # OR the API token must have Pages:Edit permission so the
