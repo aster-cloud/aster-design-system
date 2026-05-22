@@ -58,6 +58,12 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # Use npm to install wrangler. v4 auto-detects pnpm because the
+          # repo has a pnpm-lock.yaml, then fails when `pnpm add wrangler`
+          # runs at workspace root (ERR_PNPM_ADDING_TO_ROOT). Forcing npm
+          # makes the action install wrangler in its own ephemeral
+          # directory without touching the workspace.
+          packageManager: npm
           # First run will create the Pages project; subsequent runs
           # update it. The project must already exist on the account
           # OR the API token must have Pages:Edit permission so the
