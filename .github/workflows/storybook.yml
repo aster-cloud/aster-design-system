@@ -38,7 +38,7 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'pnpm'
 
       - run: pnpm install --frozen-lockfile
@@ -53,17 +53,23 @@ jobs:
         working-directory: apps/storybook
         run: pnpm build
 
+      # Pre-install wrangler globally so the action's auto-install logic
+      # short-circuits. wrangler-action@v4 with our pnpm workspace layout
+      # hits two failure modes:
+      #   1. `pnpm exec wrangler` errors (workspace can't resolve it).
+      #   2. `npm install wrangler@4` / `npx wrangler@4` then fails non-
+      #      interactively because npm prompts before installing a missing
+      #      package (npx cancellation: "no YES option").
+      # `npm install -g wrangler@4` puts it on PATH so the action's
+      # existing-wrangler check succeeds and skips its install path.
+      - name: Install wrangler
+        run: npm install -g wrangler@4
+
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          # Use npm to install wrangler. v4 auto-detects pnpm because the
-          # repo has a pnpm-lock.yaml, then fails when `pnpm add wrangler`
-          # runs at workspace root (ERR_PNPM_ADDING_TO_ROOT). Forcing npm
-          # makes the action install wrangler in its own ephemeral
-          # directory without touching the workspace.
-          packageManager: npm
           # First run will create the Pages project; subsequent runs
           # update it. The project must already exist on the account
           # OR the API token must have Pages:Edit permission so the
