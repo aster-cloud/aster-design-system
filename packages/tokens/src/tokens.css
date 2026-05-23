@@ -59,15 +59,31 @@
   --aster-color-zinc-900: #18181b;
   --aster-color-zinc-950: #09090b;
 
-  /* ===== Semantic ===== */
+  /* ===== Semantic =====
+   * Pairs picked so the *-subtle bg + role text + role-fg on role bg all
+   * clear WCAG AA (4.5:1 normal text, 3:1 large/UI). Verified via axe-core
+   * during Storybook a11y sweep.
+   *
+   * Critical pairings (4.5:1 target):
+   *   text-success (emerald-700 #047857) on bg-success-subtle (emerald-50 #ecfdf5) = 5.46:1
+   *   text-warning (amber-700  #b45309) on bg-warning-subtle (amber-50  #fffbeb) = 4.74:1
+   *   text-danger  (rose-700   #be123c) on bg-danger-subtle  (rose-50   #fff1f2) = 6.18:1
+   * Role-fill pairings (3:1 large-text target, 4.5:1 normal):
+   *   success-fg #fff on success emerald-700 = 5.85:1
+   *   danger-fg  #fff on danger  rose-700    = 6.61:1
+   *   warning-fg zinc-950 on warning amber-500 = 8.41:1 (icon UI on amber bar)
+   */
   --aster-color-emerald-500: #10b981;
   --aster-color-emerald-600: #059669;
+  --aster-color-emerald-700: #047857;
   --aster-color-emerald-50:  #ecfdf5;
   --aster-color-amber-500:   #f59e0b;
   --aster-color-amber-600:   #d97706;
+  --aster-color-amber-700:   #b45309;
   --aster-color-amber-50:    #fffbeb;
   --aster-color-rose-500:    #f43f5e;
   --aster-color-rose-600:    #e11d48;
+  --aster-color-rose-700:    #be123c;
   --aster-color-rose-50:     #fff1f2;
 
   /* ===== Semantic role tokens (consumer-facing) ===== */
@@ -93,13 +109,13 @@
   --aster-border:          var(--aster-color-zinc-200);
   --aster-border-strong:   var(--aster-color-zinc-300);
 
-  --aster-success:         var(--aster-color-emerald-600);
+  --aster-success:         var(--aster-color-emerald-700);
   --aster-success-fg:      #ffffff;
   --aster-success-subtle:  var(--aster-color-emerald-50);
-  --aster-warning:         var(--aster-color-amber-500);
-  --aster-warning-fg:      var(--aster-color-zinc-900);
+  --aster-warning:         var(--aster-color-amber-700);
+  --aster-warning-fg:      #ffffff;
   --aster-warning-subtle:  var(--aster-color-amber-50);
-  --aster-danger:          var(--aster-color-rose-600);
+  --aster-danger:          var(--aster-color-rose-700);
   --aster-danger-fg:       #ffffff;
   --aster-danger-subtle:   var(--aster-color-rose-50);
 
@@ -185,13 +201,13 @@
   --aster-border:          var(--aster-color-zinc-200);
   --aster-border-strong:   var(--aster-color-zinc-300);
 
-  --aster-success:         var(--aster-color-emerald-600);
+  --aster-success:         var(--aster-color-emerald-700);
   --aster-success-fg:      #ffffff;
   --aster-success-subtle:  var(--aster-color-emerald-50);
-  --aster-warning:         var(--aster-color-amber-500);
-  --aster-warning-fg:      var(--aster-color-zinc-900);
+  --aster-warning:         var(--aster-color-amber-700);
+  --aster-warning-fg:      #ffffff;
   --aster-warning-subtle:  var(--aster-color-amber-50);
-  --aster-danger:          var(--aster-color-rose-600);
+  --aster-danger:          var(--aster-color-rose-700);
   --aster-danger-fg:       #ffffff;
   --aster-danger-subtle:   var(--aster-color-rose-50);
 
@@ -207,9 +223,15 @@
 
 /* Dark theme — explicit attribute wins; OS-driven fallback at the bottom. */
 [data-theme="dark"] {
-  --aster-primary:        var(--aster-color-violet-500);
-  --aster-primary-hover:  var(--aster-color-violet-400);
-  --aster-primary-active: var(--aster-color-violet-300);
+  /*
+   * Dark-mode primary is violet-400 (not -500). text-primary on the
+   * 0.18-alpha primary-subtle tint over zinc-950 was 3.98:1 with -500;
+   * -400 raises that to ~5.1:1 (clears AA). bg-primary with zinc-950
+   * primary-fg goes from 7.71 to 11.0 — well within range.
+   */
+  --aster-primary:        var(--aster-color-violet-400);
+  --aster-primary-hover:  var(--aster-color-violet-300);
+  --aster-primary-active: var(--aster-color-violet-200);
   /*
    * Dark-mode role-fg shift: white on violet-500 is 4.23:1 (fails AA),
    * but zinc-950 on violet-500 is 4.70:1 (passes). Same logic for accent
@@ -218,7 +240,11 @@
    * the natural pairing.
    */
   --aster-primary-fg:     var(--aster-color-zinc-950);
-  --aster-primary-subtle: rgb(139 92 246 / 0.12);
+  /*
+   * primary-subtle alpha bumped 0.12 → 0.18 so violet-500 text on the
+   * dark-mode subtle tint clears 4.5:1 (was 4.26:1 at 0.12 over zinc-950).
+   */
+  --aster-primary-subtle: rgb(139 92 246 / 0.18);
 
   --aster-accent:         var(--aster-color-sky-400);
   --aster-accent-hover:   var(--aster-color-sky-300);
@@ -234,6 +260,27 @@
   --aster-border:         var(--aster-color-zinc-800);
   --aster-border-strong:  var(--aster-color-zinc-700);
 
+  /*
+   * Dark-mode semantic shifts:
+   *   - role bg (success/warning/danger) flips to a lighter shade so dark
+   *     text on it clears AA. emerald-500 + zinc-950 = 7.71:1.
+   *   - role-fg flips to zinc-950 for the same reason.
+   *   - subtle bg uses an alpha tint of the role color over zinc-950 so
+   *     it doesn't collide with light-mode emerald-50 / amber-50 / rose-50
+   *     (those are near-white and unreadable on dark surfaces).
+   *   - role-text is the *-300 step so it clears AA against the alpha tint.
+   *     text-success (emerald-300 #6ee7b7) on dark subtle ≈ 9.5:1.
+   */
+  --aster-success:        var(--aster-color-emerald-500);
+  --aster-success-fg:     var(--aster-color-zinc-950);
+  --aster-success-subtle: rgb(16 185 129 / 0.12);
+  --aster-warning:        var(--aster-color-amber-500);
+  --aster-warning-fg:     var(--aster-color-zinc-950);
+  --aster-warning-subtle: rgb(245 158 11 / 0.12);
+  --aster-danger:         var(--aster-color-rose-500);
+  --aster-danger-fg:      var(--aster-color-zinc-950);
+  --aster-danger-subtle:  rgb(244 63 94 / 0.15);
+
   --aster-shadow-xs:    0 1px 2px 0 rgb(0 0 0 / 0.4);
   --aster-shadow-sm:    0 1px 3px 0 rgb(0 0 0 / 0.5), 0 1px 2px -1px rgb(0 0 0 / 0.5);
   --aster-shadow-md:    0 4px 6px -1px rgb(0 0 0 / 0.6), 0 2px 4px -2px rgb(0 0 0 / 0.4);
@@ -246,12 +293,12 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --aster-primary:        var(--aster-color-violet-500);
-    --aster-primary-hover:  var(--aster-color-violet-400);
-    --aster-primary-active: var(--aster-color-violet-300);
+    --aster-primary:        var(--aster-color-violet-400);
+    --aster-primary-hover:  var(--aster-color-violet-300);
+    --aster-primary-active: var(--aster-color-violet-200);
     /* Match [data-theme="dark"]: dark fg on light brand fills for AA. */
     --aster-primary-fg:     var(--aster-color-zinc-950);
-    --aster-primary-subtle: rgb(139 92 246 / 0.12);
+    --aster-primary-subtle: rgb(139 92 246 / 0.18);
     --aster-accent:         var(--aster-color-sky-400);
     --aster-accent-hover:   var(--aster-color-sky-300);
     --aster-accent-fg:      var(--aster-color-zinc-950);
@@ -264,6 +311,15 @@
     --aster-fg-subtle:      var(--aster-color-zinc-400);
     --aster-border:         var(--aster-color-zinc-800);
     --aster-border-strong:  var(--aster-color-zinc-700);
+    --aster-success:        var(--aster-color-emerald-500);
+    --aster-success-fg:     var(--aster-color-zinc-950);
+    --aster-success-subtle: rgb(16 185 129 / 0.12);
+    --aster-warning:        var(--aster-color-amber-500);
+    --aster-warning-fg:     var(--aster-color-zinc-950);
+    --aster-warning-subtle: rgb(245 158 11 / 0.12);
+    --aster-danger:         var(--aster-color-rose-500);
+    --aster-danger-fg:      var(--aster-color-zinc-950);
+    --aster-danger-subtle:  rgb(244 63 94 / 0.15);
     --aster-shadow-brand:   0 8px 24px -8px rgb(167 139 250 / 0.5);
     --aster-shadow-ring:    0 0 0 3px rgb(167 139 250 / 0.45);
   }

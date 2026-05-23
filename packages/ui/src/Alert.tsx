@@ -27,11 +27,21 @@ const alertVariants = cva(
   ].join(' '),
   {
     variants: {
+      /*
+       * Each variant rides the token chain so light/dark swaps stay
+       * tied to one source of truth (packages/tokens/src/tokens.css):
+       *   bg-{tone}-subtle  → light: tone-50 | dark: alpha tint of tone-500
+       *   text-{tone}       → light: tone-700 | dark: tone-500
+       * Both pairings clear WCAG AA in either theme. The border step
+       * uses raw ramp classes (sky-200, emerald-200, ...) with explicit
+       * dark: overrides because Tailwind's opacity modifier (`/30`) does
+       * not apply to semantic tokens routed through CSS variables.
+       */
       variant: {
-        info:    'border-sky-200 bg-sky-50 text-sky-900 dark:border-sky-900/50 dark:bg-sky-950/40 dark:text-sky-200',
-        success: 'border-emerald-200 bg-success-subtle text-emerald-900 dark:border-emerald-900/50 dark:text-emerald-200',
-        warning: 'border-amber-200 bg-warning-subtle text-amber-900 dark:border-amber-900/50 dark:text-amber-200',
-        danger:  'border-rose-200 bg-danger-subtle text-rose-900 dark:border-rose-900/50 dark:text-rose-200',
+        info:    'border-sky-200 bg-accent-subtle text-accent dark:border-sky-900/50',
+        success: 'border-emerald-200 bg-success-subtle text-success dark:border-emerald-900/50',
+        warning: 'border-amber-200 bg-warning-subtle text-warning dark:border-amber-900/50',
+        danger:  'border-rose-200 bg-danger-subtle text-danger dark:border-rose-900/50',
       },
     },
     defaultVariants: { variant: 'info' },

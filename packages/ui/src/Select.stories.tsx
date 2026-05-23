@@ -12,11 +12,14 @@ const meta = {
     size: 'md',
     state: 'default',
     defaultValue: 'draft',
-  },
-  argTypes: {
-    disabled: { control: 'boolean' },
-    size: { control: 'select', options: SIZES },
-    state: { control: 'select', options: ['default', 'invalid'] },
+    /*
+     * Every isolated story renders a bare <Select> without a visible
+     * <Label htmlFor>. axe flags missing accessible names as a critical
+     * select-name violation, so the default args carry an aria-label
+     * that names the control. WithLabel overrides this to demonstrate
+     * the production composition (visible label + htmlFor).
+     */
+    'aria-label': 'Policy status',
   },
   parameters: {
     layout: 'centered',
@@ -60,7 +63,7 @@ export const Sizes: Story = {
   render: (args) => (
     <div className="flex flex-col gap-3">
       {SIZES.map((s) => (
-        <Select key={s} {...args} size={s}>
+        <Select key={s} {...args} size={s} aria-label={`Policy status (${s})`}>
           {STATUS_OPTIONS}
         </Select>
       ))}
@@ -89,9 +92,11 @@ export const WithLabel: Story = {
     docs: { description: { story: 'Select with Label. Expected form composition.' } },
   },
   render: (args) => (
+    // Strip the meta-level aria-label so the visible <Label htmlFor> is
+    // the sole accessible name (avoids the double-naming antipattern).
     <div className="flex flex-col gap-2">
       <Label htmlFor="policy-status">Status</Label>
-      <Select id="policy-status" {...args}>
+      <Select id="policy-status" {...args} aria-label={undefined}>
         {STATUS_OPTIONS}
       </Select>
     </div>
@@ -128,11 +133,11 @@ export const ThemeCompare: Story = {
         <div key={theme} data-theme={theme} className="bg-bg p-8">
           <p className="mb-4 font-mono text-xs text-fg-subtle">{theme}</p>
           <div className="flex flex-col gap-3">
-            <Select defaultValue="draft">{STATUS_OPTIONS}</Select>
-            <Select state="invalid" defaultValue="draft">
+            <Select defaultValue="draft" aria-label={`Status (${theme})`}>{STATUS_OPTIONS}</Select>
+            <Select state="invalid" defaultValue="draft" aria-label={`Status invalid (${theme})`}>
               {STATUS_OPTIONS}
             </Select>
-            <Select disabled defaultValue="draft">
+            <Select disabled defaultValue="draft" aria-label={`Status disabled (${theme})`}>
               {STATUS_OPTIONS}
             </Select>
           </div>

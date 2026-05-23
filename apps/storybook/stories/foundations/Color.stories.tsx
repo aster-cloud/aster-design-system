@@ -17,10 +17,17 @@ const ramp = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950] as const;
 function Swatch({ name, value }: { name: string; value: string }) {
   return (
     <div className="flex flex-col gap-1">
+      {/*
+        role="img" lets the swatch carry aria-label without tripping
+        axe-core's aria-prohibited-attr rule (a bare <div> cannot host
+        aria-label without a valid role). The label is the swatch's
+        whole accessible name so SR users know which step they're on.
+      */}
       <div
+        role="img"
+        aria-label={`${name}: ${value}`}
         className="h-16 rounded-md border border-border"
         style={{ background: value }}
-        aria-label={`${name}: ${value}`}
       />
       <div className="flex items-baseline justify-between">
         <span className="font-mono text-xs text-fg">{name}</span>

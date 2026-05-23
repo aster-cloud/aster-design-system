@@ -120,9 +120,9 @@ export const ThemeCompare: Story = {
         <div key={theme} data-theme={theme} className="bg-bg p-8">
           <p className="mb-4 font-mono text-xs text-fg-subtle">{theme}</p>
           <div className="flex flex-col gap-3">
-            <Input placeholder="Default" />
-            <Input state="invalid" defaultValue="not-an-email" placeholder="Invalid" />
-            <Input disabled defaultValue="Disabled" />
+            <Input placeholder="Default" aria-label={`Default input (${theme})`} />
+            <Input state="invalid" defaultValue="not-an-email" placeholder="Invalid" aria-label={`Invalid input (${theme})`} />
+            <Input disabled defaultValue="Disabled" aria-label={`Disabled input (${theme})`} />
           </div>
         </div>
       ))}

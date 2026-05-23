@@ -17,34 +17,23 @@ const preview: Preview = {
     },
     // a11y axe configuration.
     //
-    // The Storybook addon-a11y panel and Chromatic's a11y view both use
-    // axe under the hood, but they pick rule sets differently:
-    //   - Local addon-a11y respects `parameters.a11y.options.runOnly`
-    //     and we limit it to WCAG 2 / 2.1 A+AA tags. Best-practice
-    //     warnings are filtered out so reviewers focus on real WCAG
-    //     failures.
-    //   - Chromatic ignores `runOnly` and runs every default axe rule,
-    //     including `best-practice` tagged rules.
+    // We let axe run its full default rule set (no `runOnly` filter)
+    // so the Storybook addon-a11y panel matches what Chromatic's
+    // accessibility view reports. Previously we limited the panel to
+    // WCAG 2 / 2.1 A+AA tags which hid real violations like missing
+    // form-control `name` attributes from local review.
     //
-    // Two best-practice rules fire on every single story because each
-    // story renders in an isolated iframe without a full page document:
+    // Two best-practice rules are explicitly disabled at the preview
+    // level because they don't apply to component-isolation stories:
     //   - landmark-one-main: "document should have one main landmark"
     //   - page-has-heading-one: "page should contain a level-one heading"
     //
-    // Neither applies to a component-isolation story. A Button in
-    // isolation neither needs a <main> landmark nor an <h1>. Both rules
-    // are disabled at the preview level via `config.rules` so they
-    // don't fire in either tool. The full-page foundation stories
-    // (Brand/Color/Typography) DO have an h1 + main landmark anyway,
-    // so disabling globally costs nothing for them and silences the
-    // false positives for component stories.
+    // Story iframes are bare component-mount contexts, not pages — they
+    // neither need a <main> landmark nor an <h1>. Foundation stories
+    // (Brand/Color/Typography) do render those anyway, so the disable
+    // costs nothing on the full-page side and silences ~130 false
+    // positives across the 65-story project.
     a11y: {
-      options: {
-        runOnly: {
-          type: 'tag',
-          values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'],
-        },
-      },
       config: {
         rules: [
           { id: 'landmark-one-main', enabled: false },

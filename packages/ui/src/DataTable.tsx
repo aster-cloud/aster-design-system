@@ -47,6 +47,13 @@ export interface DataTableProps<Row> {
   /** Optional row click handler → makes the row keyboard-actionable. */
   onRowClick?: (row: Row, index: number) => void;
   className?: string;
+  /**
+   * Accessible name for the scrollable region wrapper. Required for
+   * keyboard users on narrow viewports where the table overflows
+   * horizontally — axe-core's `scrollable-region-focusable` rule fails
+   * the wrapper if it is focusable but unnamed.
+   */
+  'aria-label'?: string;
 }
 
 export function DataTable<Row>({
@@ -57,11 +64,19 @@ export function DataTable<Row>({
   emptyState,
   onRowClick,
   className,
+  'aria-label': ariaLabel = 'Data table',
 }: DataTableProps<Row>) {
   return (
     <div
+      // Scrollable wrapper must be keyboard-focusable so users can pan
+      // horizontally without a pointer. role="region" + aria-label gives
+      // it a name in the accessibility tree.
+      role="region"
+      aria-label={ariaLabel}
+      tabIndex={0}
       className={cn(
         'overflow-x-auto rounded-xl border border-border bg-bg shadow-sm',
+        'focus-visible:outline-none focus-visible:shadow-ring',
         className,
       )}
     >
