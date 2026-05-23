@@ -39,10 +39,13 @@ function Swatch({ name, value }: { name: string; value: string }) {
 
 function Ramp({ scaleName, prefix }: { scaleName: string; prefix: string }) {
   return (
+    // <h2> (not <h3>) so the page heading order stays h1 → h2 with no
+    // skipped levels. The visual size is controlled by Tailwind, not the
+    // semantic level — axe's heading-order rule checks the DOM order.
     <section className="flex flex-col gap-3">
-      <h3 className="font-display text-xl font-semibold tracking-tight text-fg">
+      <h2 className="font-display text-xl font-semibold tracking-tight text-fg">
         {scaleName}
-      </h3>
+      </h2>
       <div className="grid grid-cols-11 gap-2">
         {ramp.map((step) => (
           <Swatch

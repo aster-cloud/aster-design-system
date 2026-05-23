@@ -165,12 +165,21 @@ export const ThemeCompare: Story = {
     forceRootTheme: 'light',
     docs: { description: { story: 'Light and dark side by side. Sign-off view for header, borders, rows, hover, and focus.' } },
   },
+  /*
+   * Each column gets its own unique aria-label on the table's
+   * scrollable region so axe's landmark-unique rule passes (two
+   * regions with the same default "Data table" name would collide).
+   */
   render: () => (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
       {(['light', 'dark'] as const).map((theme) => (
         <div key={theme} data-theme={theme} className="bg-bg p-6">
           <p className="mb-4 font-mono text-xs text-fg-subtle">{theme}</p>
-          <DataTable columns={COLUMNS} rows={SAMPLE_ROWS.slice(0, 3)} />
+          <DataTable
+            aria-label={`Policy table (${theme})`}
+            columns={COLUMNS}
+            rows={SAMPLE_ROWS.slice(0, 3)}
+          />
         </div>
       ))}
     </div>

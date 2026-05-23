@@ -94,17 +94,28 @@ export const ThemeCompare: Story = {
     forceRootTheme: 'light',
     docs: { description: { story: 'Light and dark side by side. Sign-off view for heading and action row.' } },
   },
+  /*
+   * Each column is wrapped in <section aria-label> so the inner
+   * <header> from PageHeader no longer maps to a top-level banner
+   * landmark. Without the sectioning ancestor, axe flags both
+   * <header>s as duplicate-banner / landmark-unique violations.
+   */
   render: () => (
     <div className="grid grid-cols-1 gap-0 md:grid-cols-2">
       {(['light', 'dark'] as const).map((theme) => (
-        <div key={theme} data-theme={theme} className="bg-bg p-8">
+        <section
+          key={theme}
+          aria-label={`Theme preview (${theme})`}
+          data-theme={theme}
+          className="bg-bg p-8"
+        >
           <p className="mb-4 font-mono text-xs text-fg-subtle">{theme}</p>
           <PageHeader
             title="Policies"
             subtitle="Manage policy versions and approvals across tenants."
             action={<Button>New policy</Button>}
           />
-        </div>
+        </section>
       ))}
     </div>
   ),
