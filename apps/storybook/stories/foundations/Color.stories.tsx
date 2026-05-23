@@ -221,15 +221,19 @@ export const CssCheck: Story = {
     docs: {
       description: {
         story:
-          'Proves the token CSS + Tailwind preset are wired. Reads the resolved background of the `primary-fg on primary` swatch and asserts it equals `rgb(124, 58, 237)` (= `--aster-primary` = violet-600).',
+          'Proves the token CSS + Tailwind preset are wired. Reads the resolved background of the `primary-fg on primary` swatch and asserts it equals `rgb(109, 40, 217)` (= `--aster-primary` = violet-700, CHROMATIC ONBOARDING shift).',
       },
     },
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const swatch = await canvas.findByTestId('role-pair-primary-fg-on-primary');
+    // CHROMATIC ONBOARDING — palette shifted to violet-700 (109, 40, 217)
+    // for one push to demonstrate the visual-diff workflow. Revert this
+    // value back to 'rgb(124, 58, 237)' (violet-600) when reverting the
+    // tokens.css change.
     await expect(getComputedStyle(swatch).backgroundColor).toBe(
-      'rgb(124, 58, 237)',
+      'rgb(109, 40, 217)',
     );
   },
 };
