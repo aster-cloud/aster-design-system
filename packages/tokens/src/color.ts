@@ -111,9 +111,16 @@ export const semantic = {
   primarySubtle:  violet[50],
   primaryRing:    violet[500],
 
-  /** Accent — sky blue for AI/links/streaming. */
-  accent:         sky[500],
-  accentHover:    sky[600],
+  /**
+   * Accent — sky blue for AI/links/streaming.
+   *
+   * Pinned to sky-700 in light mode so `white on accent` clears
+   * WCAG AA (5.93:1). sky-500 (2.77:1) and sky-600 (4.10:1) both
+   * fail AA at 14px normal weight — they remain useful as decorative
+   * ramp tokens but should not be the role-level brand fill.
+   */
+  accent:         sky[700],
+  accentHover:    sky[800],
   accentFg:       '#ffffff',
   accentSubtle:   sky[50],
 

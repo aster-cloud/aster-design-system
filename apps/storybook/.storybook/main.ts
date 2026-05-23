@@ -10,7 +10,12 @@ const config: StorybookConfig = {
     '../stories/**/*.stories.@(ts|tsx|mdx)',
     '../../../packages/ui/src/**/*.stories.@(ts|tsx|mdx)',
   ],
-  addons: ['@storybook/addon-essentials'],
+  addons: [
+    '@storybook/addon-a11y',
+    '@storybook/addon-docs',
+    '@storybook/addon-vitest',
+    '@chromatic-com/storybook'
+  ],
   framework: {
     name: '@storybook/react-vite',
     options: {},

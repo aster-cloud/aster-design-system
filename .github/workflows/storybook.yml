@@ -30,14 +30,20 @@ jobs:
     permissions:
       contents: read
       deployments: write
-    # Lift Cloudflare credentials to job-level env so subsequent step
-    # `if:` expressions can reference env.X — step-level env is not
-    # available to that step's own `if:` (chicken-and-egg).
+    # Lift secrets to job-level env so subsequent step `if:` expressions
+    # can reference env.X — step-level env is not available to that
+    # step's own `if:` (chicken-and-egg).
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
     steps:
       - uses: actions/checkout@v6
+        # Chromatic needs full git history to find the right baseline
+        # commit. Without fetch-depth: 0, every run re-uploads as a
+        # brand-new baseline and PRs show every story as "new".
+        with:
+          fetch-depth: 0
 
       - uses: pnpm/action-setup@v6
         # Version pulled from packageManager in root package.json
@@ -52,12 +58,67 @@ jobs:
       # Build packages first so workspace deps (@aster-cloud/tokens,
       # @aster-cloud/ui) have their dist/ available for Storybook's
       # imports during the build.
+      #
+      # P0 contract: both build steps are intentionally REQUIRED.
+      # No continue-on-error here — a failing tokens/ui build or a broken
+      # Storybook story must block the PR. Only the Cloudflare deploy
+      # below is best-effort.
       - name: Build packages
         run: pnpm build
 
       - name: Build Storybook
         working-directory: apps/storybook
         run: pnpm build
+
+      # Storybook 10 + @storybook/addon-vitest runs every story as a test
+      # in headless chromium. The runner mounts stories through Vite and
+      # invokes each play() function (including the CssCheck that proves
+      # the token CSS chain is wired).
+      #
+      # Required for PR merge — same contract as the build steps above:
+      # no continue-on-error. A failing story play, a broken token chain,
+      # or an a11y regression must block the PR.
+      #
+      # Playwright chromium binary install: --with-deps pulls the system
+      # libraries (fontconfig, nss, etc.) that headless chromium needs on
+      # ubuntu-latest. Skipping this gives "browserType.launch: Executable
+      # doesn't exist" on first CI run.
+      - name: Install Playwright chromium
+        working-directory: apps/storybook
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Test stories (vitest + chromium)
+        working-directory: apps/storybook
+        run: pnpm test
+
+      # Chromatic visual regression. Uploads storybook-static, compares
+      # against the prior accepted baseline, and surfaces visual diffs
+      # on the PR.
+      #
+      # --exit-zero-on-changes: visual diffs do NOT block PR merge yet.
+      # Reviewers see them on chromatic.com and accept/reject manually.
+      # Flip this to --exit-code-on-changes=1 once the team is ready
+      # to treat unaccepted visual changes as required.
+      #
+      # --storybook-build-dir: skip Chromatic's own build (we already
+      # produced storybook-static above) — saves ~1 min per run.
+      #
+      # if:-guarded so fork PRs (no secret access) skip the step
+      # silently instead of failing.
+      - name: Chromatic visual regression
+        if: env.CHROMATIC_PROJECT_TOKEN != ''
+        uses: chromaui/action@v13
+        with:
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          workingDir: apps/storybook
+          storybookBuildDir: storybook-static
+          exitZeroOnChanges: true
+
+      - name: Warn when Chromatic skipped
+        if: env.CHROMATIC_PROJECT_TOKEN == ''
+        run: |
+          echo "::warning::CHROMATIC_PROJECT_TOKEN not available (fork PR or unconfigured repo)."
+          echo "::warning::Visual regression check skipped. Reviewers must inspect changes manually."
 
       # Pre-install wrangler globally so the action's auto-install logic
       # short-circuits. wrangler-action@v4 with our pnpm workspace layout

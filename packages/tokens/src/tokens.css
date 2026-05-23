@@ -78,8 +78,9 @@
   --aster-primary-subtle:  var(--aster-color-violet-50);
   --aster-primary-ring:    var(--aster-color-violet-500);
 
-  --aster-accent:          var(--aster-color-sky-500);
-  --aster-accent-hover:    var(--aster-color-sky-600);
+  /* sky-700 for accent (was sky-500): clears WCAG AA 4.5:1 with white. */
+  --aster-accent:          var(--aster-color-sky-700);
+  --aster-accent-hover:    var(--aster-color-sky-800);
   --aster-accent-fg:       #ffffff;
   --aster-accent-subtle:   var(--aster-color-sky-50);
 
@@ -139,15 +140,89 @@
   --aster-easing-bounce:    cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+/*
+ * Light theme — explicit attribute. Mirrors the :root semantic role
+ * defaults so a nested `[data-theme="light"]` wrapper can re-establish
+ * light tokens for its subtree even when an outer
+ * `[data-theme="dark"]` ancestor is present.
+ *
+ * Mechanism: CSS custom properties inherit from the nearest ancestor
+ * that defines them. Without this block, an inner light wrapper would
+ * find no `--aster-*` redefinition and keep inheriting the dark vars
+ * set on the outer wrapper.
+ *
+ * Note: Tailwind `dark:` utilities use selector matching, not custom
+ * properties — they still match descendants of any
+ * `[data-theme="dark"]` ancestor regardless of inner light wrappers.
+ * Storybook ThemeCompare stories work around this by forcing the
+ * document root to `data-theme="light"` so inner columns own their
+ * theme context cleanly (see apps/storybook/.storybook/preview.ts).
+ *
+ * Use case: side-by-side theme comparison in Storybook ThemeCompare
+ * stories, or product UIs that pin a panel to one theme inside a
+ * page that follows the system theme.
+ */
+[data-theme="light"] {
+  --aster-primary:         var(--aster-color-violet-600);
+  --aster-primary-hover:   var(--aster-color-violet-700);
+  --aster-primary-active:  var(--aster-color-violet-800);
+  --aster-primary-fg:      #ffffff;
+  --aster-primary-subtle:  var(--aster-color-violet-50);
+  --aster-primary-ring:    var(--aster-color-violet-500);
+
+  /* sky-700 for accent (was sky-500): clears WCAG AA 4.5:1 with white. */
+  --aster-accent:          var(--aster-color-sky-700);
+  --aster-accent-hover:    var(--aster-color-sky-800);
+  --aster-accent-fg:       #ffffff;
+  --aster-accent-subtle:   var(--aster-color-sky-50);
+
+  --aster-bg:              #ffffff;
+  --aster-bg-subtle:       var(--aster-color-zinc-50);
+  --aster-bg-muted:        var(--aster-color-zinc-100);
+  --aster-fg:              var(--aster-color-zinc-900);
+  --aster-fg-muted:        var(--aster-color-zinc-600);
+  --aster-fg-subtle:       var(--aster-color-zinc-500);
+  --aster-border:          var(--aster-color-zinc-200);
+  --aster-border-strong:   var(--aster-color-zinc-300);
+
+  --aster-success:         var(--aster-color-emerald-600);
+  --aster-success-fg:      #ffffff;
+  --aster-success-subtle:  var(--aster-color-emerald-50);
+  --aster-warning:         var(--aster-color-amber-500);
+  --aster-warning-fg:      var(--aster-color-zinc-900);
+  --aster-warning-subtle:  var(--aster-color-amber-50);
+  --aster-danger:          var(--aster-color-rose-600);
+  --aster-danger-fg:       #ffffff;
+  --aster-danger-subtle:   var(--aster-color-rose-50);
+
+  --aster-shadow-xs:    0 1px 2px 0 rgb(9 9 11 / 0.04);
+  --aster-shadow-sm:    0 1px 3px 0 rgb(9 9 11 / 0.06), 0 1px 2px -1px rgb(9 9 11 / 0.06);
+  --aster-shadow-md:    0 4px 6px -1px rgb(9 9 11 / 0.08), 0 2px 4px -2px rgb(9 9 11 / 0.04);
+  --aster-shadow-lg:    0 10px 15px -3px rgb(9 9 11 / 0.08), 0 4px 6px -4px rgb(9 9 11 / 0.04);
+  --aster-shadow-xl:    0 20px 25px -5px rgb(9 9 11 / 0.08), 0 8px 10px -6px rgb(9 9 11 / 0.04);
+  --aster-shadow-2xl:   0 25px 50px -12px rgb(9 9 11 / 0.18);
+  --aster-shadow-brand: 0 8px 24px -8px rgb(124 58 237 / 0.35);
+  --aster-shadow-ring:  0 0 0 3px rgb(139 92 246 / 0.35);
+}
+
 /* Dark theme — explicit attribute wins; OS-driven fallback at the bottom. */
 [data-theme="dark"] {
   --aster-primary:        var(--aster-color-violet-500);
   --aster-primary-hover:  var(--aster-color-violet-400);
   --aster-primary-active: var(--aster-color-violet-300);
+  /*
+   * Dark-mode role-fg shift: white on violet-500 is 4.23:1 (fails AA),
+   * but zinc-950 on violet-500 is 4.70:1 (passes). Same logic for accent
+   * (sky-400): white = 2.14, zinc-950 = 9.29. Brand impact is minimal —
+   * dark-mode brand fills already lean lighter, so dark text on them is
+   * the natural pairing.
+   */
+  --aster-primary-fg:     var(--aster-color-zinc-950);
   --aster-primary-subtle: rgb(139 92 246 / 0.12);
 
   --aster-accent:         var(--aster-color-sky-400);
   --aster-accent-hover:   var(--aster-color-sky-300);
+  --aster-accent-fg:      var(--aster-color-zinc-950);
   --aster-accent-subtle:  rgb(14 165 233 / 0.12);
 
   --aster-bg:             var(--aster-color-zinc-950);
@@ -174,9 +249,12 @@
     --aster-primary:        var(--aster-color-violet-500);
     --aster-primary-hover:  var(--aster-color-violet-400);
     --aster-primary-active: var(--aster-color-violet-300);
+    /* Match [data-theme="dark"]: dark fg on light brand fills for AA. */
+    --aster-primary-fg:     var(--aster-color-zinc-950);
     --aster-primary-subtle: rgb(139 92 246 / 0.12);
     --aster-accent:         var(--aster-color-sky-400);
     --aster-accent-hover:   var(--aster-color-sky-300);
+    --aster-accent-fg:      var(--aster-color-zinc-950);
     --aster-accent-subtle:  rgb(14 165 233 / 0.12);
     --aster-bg:             var(--aster-color-zinc-950);
     --aster-bg-subtle:      var(--aster-color-zinc-900);
