@@ -79,6 +79,13 @@ export default defineConfig({
         'vitest.config.ts',
         '.storybook/**',
         'stories/**',
+        // v8's HTML reporter writes asset JS (block-navigation,
+        // prettify, sorter) into coverage/. Without this exclude,
+        // the *next* run inventories the report output as 0%-covered
+        // source and tanks the headline number.
+        'coverage/**',
+        'storybook-static/**',
+        'node_modules/**',
       ],
     },
   },
