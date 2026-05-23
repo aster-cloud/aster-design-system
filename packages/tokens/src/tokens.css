@@ -71,11 +71,9 @@
   --aster-color-rose-50:     #fff1f2;
 
   /* ===== Semantic role tokens (consumer-facing) ===== */
-  /* CHROMATIC ONBOARDING — temporary palette shift to trigger a visual
-   * diff. Revert this hunk after Chromatic shows the diff on the PR. */
-  --aster-primary:         var(--aster-color-violet-700);
-  --aster-primary-hover:   var(--aster-color-violet-800);
-  --aster-primary-active:  var(--aster-color-violet-900);
+  --aster-primary:         var(--aster-color-violet-600);
+  --aster-primary-hover:   var(--aster-color-violet-700);
+  --aster-primary-active:  var(--aster-color-violet-800);
   --aster-primary-fg:      #ffffff;
   --aster-primary-subtle:  var(--aster-color-violet-50);
   --aster-primary-ring:    var(--aster-color-violet-500);
@@ -165,11 +163,9 @@
  * page that follows the system theme.
  */
 [data-theme="light"] {
-  /* CHROMATIC ONBOARDING — temporary palette shift to trigger a visual
-   * diff. Revert this hunk after Chromatic shows the diff on the PR. */
-  --aster-primary:         var(--aster-color-violet-700);
-  --aster-primary-hover:   var(--aster-color-violet-800);
-  --aster-primary-active:  var(--aster-color-violet-900);
+  --aster-primary:         var(--aster-color-violet-600);
+  --aster-primary-hover:   var(--aster-color-violet-700);
+  --aster-primary-active:  var(--aster-color-violet-800);
   --aster-primary-fg:      #ffffff;
   --aster-primary-subtle:  var(--aster-color-violet-50);
   --aster-primary-ring:    var(--aster-color-violet-500);
