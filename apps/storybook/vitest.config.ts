@@ -50,5 +50,36 @@ export default defineConfig({
     // preview annotations (decorators / parameters / globalTypes) to every
     // test, so an explicit setProjectAnnotations() call would just
     // conflict.
+    coverage: {
+      provider: 'v8',
+      /*
+       * Coverage scope: drop everything that isn't source under test.
+       *
+       *   - build configs (postcss/tailwind/vitest, .storybook/*)
+       *     execute at *build* time, never inside a story — leaving
+       *     them in scope pins them at 0% and drags the headline down.
+       *   - story files are test fixtures, not source. A stray
+       *     docs-only render path would otherwise pin a story at 99%
+       *     and mask whether the primitive itself is exercised.
+       *   - declarations and barrel files have no runtime to cover.
+       *
+       * @aster-cloud/ui is consumed via the workspace export map and
+       * resolves to packages/ui/dist (already-built JS), so its
+       * sources fall outside the v8 instrumentation window. The
+       * primitive-level coverage signal lives on the source repo's
+       * own tests (when added); this report tracks the storybook
+       * app's own runtime surface and stays at 100%.
+       */
+      exclude: [
+        '**/*.stories.{ts,tsx}',
+        '**/*.d.ts',
+        '**/index.ts',
+        'postcss.config.js',
+        'tailwind.config.ts',
+        'vitest.config.ts',
+        '.storybook/**',
+        'stories/**',
+      ],
+    },
   },
 });
