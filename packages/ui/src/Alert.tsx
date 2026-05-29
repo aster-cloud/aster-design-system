@@ -30,25 +30,20 @@ const alertVariants = cva(
       /*
        * Each variant rides the token chain so light/dark swaps stay
        * tied to one source of truth (packages/tokens/src/tokens.css):
-       *   bg-{tone}-subtle  → light: tone-50 | dark: alpha tint of tone-500
-       *   text-{tone}       → light: tone-700 | dark: tone-500
-       * Both pairings clear WCAG AA in either theme. The border step
-       * uses raw ramp classes (sky-200, emerald-200, ...) with explicit
-       * dark: overrides because Tailwind's opacity modifier (`/30`) does
-       * not apply to semantic tokens routed through CSS variables.
+       *   bg-{tone}-subtle      → light: tone-50    | dark: alpha tint of tone-500
+       *   text-{tone}           → light: tone-700   | dark: tone-500
+       *   border-{tone}-subtle  → light: tone-200   | dark: tone-900/0.5
        *
-       * R30+ audit P2 follow-up: long-term move is to add
-       * --border-info-subtle / --border-success-subtle etc. tokens in
-       * tokens.css so this whole block can become
-       *   border-border-info-subtle dark:border-border-info-subtle
-       * Tracked as R31 nice-to-have. Current raw-ramp form is the only
-       * working pattern until the token surface grows.
+       * R31-2: border now uses semantic tokens routed via
+       *   --aster-border-{accent,success,warning,danger}-subtle
+       * Both light + dark values live in tokens.css, no dark: override
+       * needed on the className. Source of truth fully unified.
        */
       variant: {
-        info:    'border-sky-200 bg-accent-subtle text-accent dark:border-sky-900/50',
-        success: 'border-emerald-200 bg-success-subtle text-success dark:border-emerald-900/50',
-        warning: 'border-amber-200 bg-warning-subtle text-warning dark:border-amber-900/50',
-        danger:  'border-rose-200 bg-danger-subtle text-danger dark:border-rose-900/50',
+        info:    'border-border-accent-subtle bg-accent-subtle text-accent',
+        success: 'border-border-success-subtle bg-success-subtle text-success',
+        warning: 'border-border-warning-subtle bg-warning-subtle text-warning',
+        danger:  'border-border-danger-subtle bg-danger-subtle text-danger',
       },
     },
     defaultVariants: { variant: 'info' },

@@ -84,6 +84,12 @@ export const asterTailwindPreset = {
         border: {
           DEFAULT: v('border'),
           strong:  v('border-strong'),
+          // R31-2：semantic border tokens 跟 *-subtle 背景配套，
+          // 替代之前 Alert / Banner 里散落的 border-sky-200 raw ramp。
+          accent:  { subtle: v('border-accent-subtle') },
+          success: { subtle: v('border-success-subtle') },
+          warning: { subtle: v('border-warning-subtle') },
+          danger:  { subtle: v('border-danger-subtle') },
         },
       },
       fontFamily: {

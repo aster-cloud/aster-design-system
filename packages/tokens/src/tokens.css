@@ -119,6 +119,13 @@
   --aster-danger-fg:       #ffffff;
   --aster-danger-subtle:   var(--aster-color-rose-50);
 
+  /* R31-2 border-subtle tokens —— Alert / Banner / Callout 等带 *-subtle 背景
+   * 的边框，原本用 raw ramp（border-sky-200 等），现在走语义 token。 */
+  --aster-border-accent-subtle:  var(--aster-color-sky-200);
+  --aster-border-success-subtle: var(--aster-color-emerald-200);
+  --aster-border-warning-subtle: var(--aster-color-amber-200);
+  --aster-border-danger-subtle:  var(--aster-color-rose-200);
+
   /* ===== Typography ===== */
   --aster-font-display: "Fraunces", "Source Serif 4", Georgia, serif;
   --aster-font-sans:    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -211,6 +218,11 @@
   --aster-danger-fg:       #ffffff;
   --aster-danger-subtle:   var(--aster-color-rose-50);
 
+  --aster-border-accent-subtle:  var(--aster-color-sky-200);
+  --aster-border-success-subtle: var(--aster-color-emerald-200);
+  --aster-border-warning-subtle: var(--aster-color-amber-200);
+  --aster-border-danger-subtle:  var(--aster-color-rose-200);
+
   --aster-shadow-xs:    0 1px 2px 0 rgb(9 9 11 / 0.04);
   --aster-shadow-sm:    0 1px 3px 0 rgb(9 9 11 / 0.06), 0 1px 2px -1px rgb(9 9 11 / 0.06);
   --aster-shadow-md:    0 4px 6px -1px rgb(9 9 11 / 0.08), 0 2px 4px -2px rgb(9 9 11 / 0.04);
@@ -281,6 +293,14 @@
   --aster-danger-fg:      var(--aster-color-zinc-950);
   --aster-danger-subtle:  rgb(244 63 94 / 0.15);
 
+  /* R31-2 border-subtle 暗色：使用 *-900 在 0.5 透明度。 *-200 在暗背景上
+   * 太亮反差；*-900/0.5 是 ramp 深值 + 半透，在 *-subtle 半透背景上既
+   * 比 bg 略亮（可见）又不抢内容。 */
+  --aster-border-accent-subtle:  rgb(12 74 110 / 0.5);   /* sky-900/50 */
+  --aster-border-success-subtle: rgb(6 78 59 / 0.5);     /* emerald-900/50 */
+  --aster-border-warning-subtle: rgb(120 53 15 / 0.5);   /* amber-900/50 */
+  --aster-border-danger-subtle:  rgb(136 19 55 / 0.5);   /* rose-900/50 */
+
   --aster-shadow-xs:    0 1px 2px 0 rgb(0 0 0 / 0.4);
   --aster-shadow-sm:    0 1px 3px 0 rgb(0 0 0 / 0.5), 0 1px 2px -1px rgb(0 0 0 / 0.5);
   --aster-shadow-md:    0 4px 6px -1px rgb(0 0 0 / 0.6), 0 2px 4px -2px rgb(0 0 0 / 0.4);
@@ -320,6 +340,11 @@
     --aster-danger:         var(--aster-color-rose-500);
     --aster-danger-fg:      var(--aster-color-zinc-950);
     --aster-danger-subtle:  rgb(244 63 94 / 0.15);
+    /* R31-2 border-subtle dark via prefers-color-scheme fallback */
+    --aster-border-accent-subtle:  rgb(12 74 110 / 0.5);
+    --aster-border-success-subtle: rgb(6 78 59 / 0.5);
+    --aster-border-warning-subtle: rgb(120 53 15 / 0.5);
+    --aster-border-danger-subtle:  rgb(136 19 55 / 0.5);
     --aster-shadow-brand:   0 8px 24px -8px rgb(167 139 250 / 0.5);
     --aster-shadow-ring:    0 0 0 3px rgb(167 139 250 / 0.45);
   }
