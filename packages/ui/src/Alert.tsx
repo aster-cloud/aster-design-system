@@ -36,6 +36,13 @@ const alertVariants = cva(
        * uses raw ramp classes (sky-200, emerald-200, ...) with explicit
        * dark: overrides because Tailwind's opacity modifier (`/30`) does
        * not apply to semantic tokens routed through CSS variables.
+       *
+       * R30+ audit P2 follow-up: long-term move is to add
+       * --border-info-subtle / --border-success-subtle etc. tokens in
+       * tokens.css so this whole block can become
+       *   border-border-info-subtle dark:border-border-info-subtle
+       * Tracked as R31 nice-to-have. Current raw-ramp form is the only
+       * working pattern until the token surface grows.
        */
       variant: {
         info:    'border-sky-200 bg-accent-subtle text-accent dark:border-sky-900/50',
