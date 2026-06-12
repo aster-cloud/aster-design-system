@@ -5,6 +5,14 @@ All notable changes to this package are documented here. Semantic versioning
 
 ## [Unreleased]
 
+### Added
+- `--aster-shadow-ring-danger` semantic token (exposed as Tailwind
+  `shadow-ring-danger`): the danger/invalid focus-ring shadow, mirroring
+  `--aster-shadow-ring`. Light: rose-500 @ 30%; dark: rose-400 @ 40%
+  (matching the brand ring's light→dark opacity bump). Replaces a
+  hardcoded `shadow-[...rgb(244 63 94/0.30)...]` that was duplicated in
+  the Input and Textarea invalid states.
+
 ## [0.2.0] — 2026-05-22
 
 ### Changed

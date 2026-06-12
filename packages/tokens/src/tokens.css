@@ -149,6 +149,7 @@
   --aster-shadow-2xl:   0 25px 50px -12px rgb(9 9 11 / 0.18);
   --aster-shadow-brand: 0 8px 24px -8px rgb(124 58 237 / 0.35);
   --aster-shadow-ring:  0 0 0 3px rgb(139 92 246 / 0.35);
+  --aster-shadow-ring-danger: 0 0 0 3px rgb(244 63 94 / 0.30);
 
   /* ===== Motion ===== */
   --aster-duration-instant: 0ms;
@@ -231,6 +232,7 @@
   --aster-shadow-2xl:   0 25px 50px -12px rgb(9 9 11 / 0.18);
   --aster-shadow-brand: 0 8px 24px -8px rgb(124 58 237 / 0.35);
   --aster-shadow-ring:  0 0 0 3px rgb(139 92 246 / 0.35);
+  --aster-shadow-ring-danger: 0 0 0 3px rgb(244 63 94 / 0.30);
 }
 
 /* Dark theme — explicit attribute wins; OS-driven fallback at the bottom. */
@@ -309,6 +311,7 @@
   --aster-shadow-2xl:   0 25px 50px -12px rgb(0 0 0 / 0.8);
   --aster-shadow-brand: 0 8px 24px -8px rgb(167 139 250 / 0.5);
   --aster-shadow-ring:  0 0 0 3px rgb(167 139 250 / 0.45);
+  --aster-shadow-ring-danger: 0 0 0 3px rgb(251 113 133 / 0.40);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -347,5 +350,6 @@
     --aster-border-danger-subtle:  rgb(136 19 55 / 0.5);
     --aster-shadow-brand:   0 8px 24px -8px rgb(167 139 250 / 0.5);
     --aster-shadow-ring:    0 0 0 3px rgb(167 139 250 / 0.45);
+    --aster-shadow-ring-danger: 0 0 0 3px rgb(251 113 133 / 0.40);
   }
 }

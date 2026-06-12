@@ -31,7 +31,7 @@ const inputVariants = cva(
       },
       state: {
         default: 'border-border',
-        invalid: 'border-danger focus-visible:border-danger focus-visible:shadow-[0_0_0_3px_rgb(244_63_94/0.30)]',
+        invalid: 'border-danger focus-visible:border-danger focus-visible:shadow-ring-danger',
       },
     },
     defaultVariants: { size: 'md', state: 'default' },
