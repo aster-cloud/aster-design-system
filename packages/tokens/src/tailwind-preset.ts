@@ -117,6 +117,7 @@ export const asterTailwindPreset = {
         '2xl': v('shadow-2xl'),
         brand: v('shadow-brand'),
         ring:  v('shadow-ring'),
+        'ring-danger': v('shadow-ring-danger'),
       },
       transitionDuration: motion.duration,
       transitionTimingFunction: motion.easing,

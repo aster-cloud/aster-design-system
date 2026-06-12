@@ -5,6 +5,13 @@ All notable changes to this package are documented here. Semantic versioning
 
 ## [Unreleased]
 
+### Changed
+- Input and Textarea invalid-state focus rings now use the new
+  `shadow-ring-danger` token instead of a hardcoded rose shadow value
+  (was duplicated across both components). No visual change in light
+  mode; dark mode gains a slightly brighter ring for parity with the
+  brand ring.
+
 ## [0.3.0] — 2026-05-22
 
 ### Changed
