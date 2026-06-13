@@ -11,3 +11,8 @@ coverage/
 .env.local
 # v7 §8.7 — glossary consumer-side cache directory (CI-populated, never committed)
 .glossary/cache/
+
+# IDE / AI tooling (local-only, aligned with ecosystem .gitignore)
+.idea/
+*.iml
+.claude/
