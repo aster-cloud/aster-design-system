@@ -47,3 +47,10 @@ consumers:
     status: active
     glossary-config-path: glossary.config.yaml
     expected-surfaces: [overlays, vocabularies]
+
+  - org: aster-cloud
+    repo: aster-lang-hi
+    tier: official
+    status: active
+    glossary-config-path: glossary.config.yaml
+    expected-surfaces: [overlays, vocabularies]
