@@ -16,6 +16,7 @@ terms:
       en-US: license key
       zh-CN: 授权密钥
       de-DE: Lizenzschlüssel
+      hi-IN: लाइसेंस कुंजी
     match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
     tenant-overridable: true
     applies-to: [aster-cloud:messages, aster-cloud:docs/on-prem, aster-lang-dev:docs]
@@ -32,6 +33,7 @@ terms:
       en-US: revocation list
       zh-CN: 撤销列表
       de-DE: Sperrliste
+      hi-IN: निरस्तीकरण सूची
     match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
 
   grace-period:
@@ -46,6 +48,7 @@ terms:
       en-US: grace period
       zh-CN: 宽限期
       de-DE: Kulanzfrist
+      hi-IN: छूट अवधि
     match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
 
   renewal-overlap:
@@ -60,6 +63,7 @@ terms:
       en-US: renewal overlap
       zh-CN: 续约重叠期
       de-DE: Verlängerungsüberlappung
+      hi-IN: नवीनीकरण ओवरलैप
     match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
 
   air-gapped-license:
@@ -74,6 +78,7 @@ terms:
       en-US: air-gapped license
       zh-CN: 物理隔离授权
       de-DE: Air-Gapped-Lizenz
+      hi-IN: एयर-गैप्ड लाइसेंस
     match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, punctuation, whitespace] }
 
   enterprise-sku:
@@ -88,6 +93,7 @@ terms:
       en-US: enterprise SKU
       zh-CN: 企业版
       de-DE: Enterprise-SKU
+      hi-IN: एंटरप्राइज़ SKU
     match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
     tenant-overridable: true
 
@@ -103,6 +109,7 @@ terms:
       en-US: standard SKU
       zh-CN: 标准版
       de-DE: Standard-SKU
+      hi-IN: स्टैंडर्ड SKU
     match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
     tenant-overridable: true
 
@@ -118,4 +125,5 @@ terms:
       en-US: superseded license
       zh-CN: 已被替换的授权
       de-DE: ersetzte Lizenz
+      hi-IN: अधिक्रमित लाइसेंस
     match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
