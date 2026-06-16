@@ -14,6 +14,7 @@ terms:
       en-US: DSAR
       zh-CN: DSAR（数据主体访问请求）
       de-DE: DSGVO-Anfrage
+      hi-IN: DSAR
     match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [width, whitespace] }
     applies-to: [aster-cloud:messages, aster-cloud:docs/on-prem]
 
@@ -30,6 +31,7 @@ terms:
       en-US: DSAR access
       zh-CN: DSAR 访问请求
       de-DE: DSGVO-Auskunftsanfrage
+      hi-IN: DSAR पहुँच
     match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [width, whitespace] }
 
   dsar-deletion:
@@ -45,6 +47,7 @@ terms:
       en-US: DSAR deletion
       zh-CN: DSAR 删除请求
       de-DE: DSGVO-Löschanfrage
+      hi-IN: DSAR विलोपन
     match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [width, whitespace] }
 
   dry-run-preview:
@@ -59,6 +62,7 @@ terms:
       en-US: dry-run preview
       zh-CN: 试运行预览
       de-DE: Probelauf-Vorschau
+      hi-IN: ड्राई-रन पूर्वावलोकन
     match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, punctuation, whitespace] }
 
   access-audit:
@@ -74,6 +78,7 @@ terms:
       en-US: access audit
       zh-CN: 访问审计
       de-DE: Zugriffsaudit
+      hi-IN: पहुँच ऑडिट
     match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
 
   delete-audit:
@@ -89,6 +94,7 @@ terms:
       en-US: delete audit
       zh-CN: 删除审计
       de-DE: Löschaudit
+      hi-IN: विलोपन ऑडिट
     match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
 
   retention-window:
@@ -104,6 +110,7 @@ terms:
       en-US: retention window
       zh-CN: 保留期
       de-DE: Aufbewahrungsfenster
+      hi-IN: प्रतिधारण अवधि
     match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
 
   gdpr-art-15:
@@ -120,6 +127,7 @@ terms:
       en-US: GDPR Art 15
       zh-CN: GDPR 第 15 条
       de-DE: DSGVO Art. 15
+      hi-IN: GDPR अनुच्छेद 15
     match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [width, whitespace] }
 
   gdpr-art-17:
@@ -136,4 +144,5 @@ terms:
       en-US: GDPR Art 17
       zh-CN: GDPR 第 17 条
       de-DE: DSGVO Art. 17
+      hi-IN: GDPR अनुच्छेद 17
     match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [width, whitespace] }

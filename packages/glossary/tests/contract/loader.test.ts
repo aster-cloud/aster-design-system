@@ -16,7 +16,7 @@ describe('loadGlossary (real glossary)', () => {
   it('loads the 38 seed terms successfully', () => {
     const g = loadGlossary({ rootDir: srcRoot });
     expect(g.localesVersion).toBe(1);
-    expect(g.locales.map((l) => l.id).sort()).toEqual(['de-DE', 'en-US', 'zh-CN']);
+    expect(g.locales.map((l) => l.id).sort()).toEqual(['de-DE', 'en-US', 'hi-IN', 'zh-CN']);
     expect(Object.keys(g.terms).length).toBeGreaterThanOrEqual(38);
   });
 

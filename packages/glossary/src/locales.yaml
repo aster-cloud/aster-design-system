@@ -8,3 +8,5 @@ locales:
     bcp47: zh-Hans-CN
   - id: de-DE
     bcp47: de-DE
+  - id: hi-IN
+    bcp47: hi-IN

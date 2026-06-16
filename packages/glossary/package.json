@@ -1,6 +1,6 @@
 {
   "name": "@aster-cloud/glossary",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Aster glossary contract — single source of truth for cross-locale terminology. See .claude/plan/glossary-contract.md (v7) in aster-cloud for design.",
   "publishConfig": {
     "access": "public",

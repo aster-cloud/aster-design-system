@@ -13,6 +13,7 @@ terms:
       en-US: telemetry
       zh-CN: 遥测
       de-DE: Telemetrie
+      hi-IN: टेलीमेट्री
     match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
     forbidden-aliases:
       zh-CN:
@@ -32,6 +33,7 @@ terms:
       en-US: telemetry opt-in
       zh-CN: 启用遥测
       de-DE: Telemetrie-Aktivierung
+      hi-IN: टेलीमेट्री ऑप्ट-इन
     match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
     applies-to: [aster-cloud:docs/on-prem]
 
@@ -47,6 +49,7 @@ terms:
       en-US: telemetry opt-out
       zh-CN: 关闭遥测
       de-DE: Telemetrie-Deaktivierung
+      hi-IN: टेलीमेट्री ऑप्ट-आउट
     match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
 
   telemetry-payload:
@@ -61,6 +64,7 @@ terms:
       en-US: telemetry payload
       zh-CN: 遥测数据
       de-DE: Telemetrie-Nutzdaten
+      hi-IN: टेलीमेट्री पेलोड
     match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
 
   data-residency:
@@ -77,6 +81,7 @@ terms:
       en-US: data residency
       zh-CN: 数据所在区域
       de-DE: Datenresidenz
+      hi-IN: डेटा निवास
     match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
     forbidden-aliases:
       zh-CN:
@@ -100,6 +105,7 @@ terms:
       en-US: data region
       zh-CN: 数据区域
       de-DE: Datenregion
+      hi-IN: डेटा क्षेत्र
     match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
 
   customer-mask:
@@ -114,6 +120,7 @@ terms:
       en-US: customer mask
       zh-CN: 客户字段脱敏
       de-DE: Kundenmaskierung
+      hi-IN: ग्राहक मास्क
     match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
 
   dedup:
@@ -128,6 +135,7 @@ terms:
       en-US: deduplication
       zh-CN: 去重
       de-DE: Deduplizierung
+      hi-IN: डीडुप्लीकेशन
     match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
 
   aggregation-window:
@@ -142,6 +150,7 @@ terms:
       en-US: aggregation window
       zh-CN: 聚合窗口
       de-DE: Aggregationsfenster
+      hi-IN: एकत्रीकरण अवधि
     match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }
 
   period-start:
@@ -157,6 +166,7 @@ terms:
       en-US: periodStart
       zh-CN: periodStart
       de-DE: periodStart
+      hi-IN: periodStart
     match: { mode: literal, case-sensitive: true }
 
   period-end:
@@ -172,6 +182,7 @@ terms:
       en-US: periodEnd
       zh-CN: periodEnd
       de-DE: periodEnd
+      hi-IN: periodEnd
     match: { mode: literal, case-sensitive: true }
 
   seat-limit-hit:
@@ -186,4 +197,5 @@ terms:
       en-US: seat limit hit
       zh-CN: 已达座位上限
       de-DE: Sitzplatzlimit erreicht
+      hi-IN: सीट सीमा पूर्ण
     match: { mode: phrase, case-sensitive: false, boundary: unicode-word, normalize: [case, width, whitespace] }

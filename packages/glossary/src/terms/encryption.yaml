@@ -25,6 +25,7 @@ terms:
       en-US: envelope encryption
       zh-CN: 信封加密
       de-DE: Umhüllungsverschlüsselung
+      hi-IN: एनवेलप एन्क्रिप्शन
     match:
       mode: phrase
       case-sensitive: false
@@ -64,6 +65,7 @@ terms:
       en-US: Key Encryption Key (KEK)
       zh-CN: 密钥加密密钥（KEK）
       de-DE: Key Encryption Key (KEK)
+      hi-IN: Key Encryption Key (KEK)
     match:
       mode: phrase
       case-sensitive: true
@@ -86,6 +88,7 @@ terms:
       en-US: Data Encryption Key (DEK)
       zh-CN: 数据加密密钥（DEK）
       de-DE: Data Encryption Key (DEK)
+      hi-IN: Data Encryption Key (DEK)
     match:
       mode: phrase
       case-sensitive: true
@@ -109,6 +112,7 @@ terms:
       en-US: HMAC secret
       zh-CN: HMAC 密钥
       de-DE: HMAC-Geheimnis
+      hi-IN: HMAC सीक्रेट
     match:
       mode: phrase
       case-sensitive: false
@@ -136,6 +140,7 @@ terms:
       en-US: signing key ID
       zh-CN: 签名密钥 ID
       de-DE: Signaturschlüssel-ID
+      hi-IN: साइनिंग कुंजी ID
     match:
       mode: phrase
       case-sensitive: false
