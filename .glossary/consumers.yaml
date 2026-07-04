@@ -27,22 +27,14 @@ consumers:
     glossary-config-path: glossary.config.yaml
     expected-surfaces: [overlays]
 
+  # The per-language aster-lang-en / -zh / -de repos were retired and
+  # consolidated into the canonical aster-lang-locales repo (ADR-0011).
+  # They are removed rather than marked `status: retired` because the
+  # consumer schema only permits `active | onboarding`
+  # (packages/glossary/src/schema.ts). Leaving them would keep matrix /
+  # parity generation pointed at three archived repos.
   - org: aster-cloud
-    repo: aster-lang-en
-    tier: official
-    status: active
-    glossary-config-path: glossary.config.yaml
-    expected-surfaces: [overlays, vocabularies]
-
-  - org: aster-cloud
-    repo: aster-lang-zh
-    tier: official
-    status: active
-    glossary-config-path: glossary.config.yaml
-    expected-surfaces: [overlays, vocabularies]
-
-  - org: aster-cloud
-    repo: aster-lang-de
+    repo: aster-lang-locales
     tier: official
     status: active
     glossary-config-path: glossary.config.yaml
