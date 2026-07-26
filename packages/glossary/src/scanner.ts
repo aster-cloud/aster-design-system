@@ -241,18 +241,38 @@ export interface MarkdownBlock {
   startLine: number;
 }
 
+// Open/close markers are matched by two independent, non-backtracking
+// regexes instead of a single `open ([\s\S]*?) close` pattern. The combined
+// pattern was polynomial (js/polynomial-redos): every open marker started a
+// match whose lazy body re-scanned to end-of-input searching for a close, so
+// N unclosed opens cost O(N²). Splitting the phases and locating the close via
+// a `lastIndex`-anchored search makes extraction strictly linear while keeping
+// identical pairing semantics (first close after each open wins; scanning
+// resumes past the close marker).
+const GLOSSARY_BLOCK_OPEN = /<!--\s*glossary:block\s+id=([a-z0-9][a-z0-9-]*)\s*-->/g;
+const GLOSSARY_BLOCK_CLOSE = /<!--\s*\/glossary:block\s*-->/g;
+
 /** Extract `<!-- glossary:block id=X -->` … `<!-- /glossary:block -->` pairs from Markdown text. */
 export function extractGlossaryBlocks(markdown: string): MarkdownBlock[] {
   const blocks: MarkdownBlock[] = [];
-  const re = /<!--\s*glossary:block\s+id=([a-z0-9][a-z0-9-]*)\s*-->([\s\S]*?)<!--\s*\/glossary:block\s*-->/g;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(markdown)) !== null) {
-    const startLine = markdown.slice(0, m.index).split('\n').length;
+  GLOSSARY_BLOCK_OPEN.lastIndex = 0;
+  let open: RegExpExecArray | null;
+  while ((open = GLOSSARY_BLOCK_OPEN.exec(markdown)) !== null) {
+    const bodyStart = GLOSSARY_BLOCK_OPEN.lastIndex;
+    GLOSSARY_BLOCK_CLOSE.lastIndex = bodyStart;
+    const close = GLOSSARY_BLOCK_CLOSE.exec(markdown);
+    // No close marker after this open ⇒ no later open can be paired either
+    // (any close would have to sit after this position), so extraction ends.
+    if (close === null) break;
+    const startLine = markdown.slice(0, open.index).split('\n').length;
     blocks.push({
-      id: m[1]!,
-      text: extractProseFromMarkdownBlock(m[2]!),
+      id: open[1]!,
+      text: extractProseFromMarkdownBlock(markdown.slice(bodyStart, close.index)),
       startLine,
     });
+    // Resume the open-marker search past the close marker, mirroring the
+    // original `/g` pattern resuming at the end of the full match.
+    GLOSSARY_BLOCK_OPEN.lastIndex = GLOSSARY_BLOCK_CLOSE.lastIndex;
   }
   return blocks;
 }
