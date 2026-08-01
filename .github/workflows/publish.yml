@@ -50,6 +50,33 @@ jobs:
       - name: Build packages
         run: pnpm build
 
+      # ★发布前必须过质量门。此前本 workflow 只有 build，没有任何
+      #   test / lint / typecheck —— 三个**公开 npm 包**
+      #   （@aster-cloud/tokens、ui、glossary）就这么发出去了。
+      #
+      #   PR 上确实有测试，但它们在 storybook.yml 里，触发条件是
+      #   `push: main` / `pull_request` —— **tag push 从不触发**。
+      #   而 tag 才是本仓的版本真相源，workflow_dispatch 更是文档明写的
+      #   「emergency republish without retagging」。两条发布路径都绕过了测试。
+      #
+      #   对照 aster-lang-ts/release.yml：publish 有 `needs: ci`，
+      #   正确的形态在同 org 已经存在。
+      #
+      # ★typecheck 必须放在 build 之后：glossary-fmt 依赖
+      #   `@aster-cloud/glossary/schema` 的产物，build 前 tsc 会报
+      #   TS2307 Cannot find module（实测）。
+      - name: Typecheck
+        run: pnpm typecheck
+
+      # 浏览器用例与 storybook.yml 保持同一套（含 --with-deps 装系统依赖）。
+      # 这一步较慢，但发布是低频操作，用它换「不发未验证的包」是划算的。
+      - name: Install Playwright chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Test stories (vitest + chromium)
+        working-directory: apps/storybook
+        run: pnpm test
+
       # Publish tokens first because ui depends on it transitively.
       # `--no-git-checks` because tags are the canonical version source,
       # and pnpm otherwise wants a clean working tree we just dirtied
