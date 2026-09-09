@@ -8,9 +8,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 @import '@aster-cloud/tokens/tokens.css';
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Tailwind v4：单条 @import 取代 v3 的 @tailwind base/components/utilities。 */
+@import 'tailwindcss';
+
+/* ★沿用 v3 风格的 JS config（tailwind.config.ts）。
+ *
+ * v4 默认走 CSS-first 的 @theme，但仍提供 @config 兼容层加载旧式配置。
+ * 这里刻意保留 JS config，因为 @aster-cloud/tokens 对外导出的
+ * `tailwind-preset` 是一份 133 行的 token→theme 映射，且它是 tokens 包
+ * 的**公开 API**（package.json exports 里有 ./tailwind-preset）。
+ * 把它改写成 @theme 等于对已发布包做破坏性变更，不属于「升级依赖」的
+ * 范围。待将来单独规划 preset → @theme 的迁移时再动。
+ */
+@config '../tailwind.config.ts';
 
 html, body, #storybook-root {
   font-family: var(--aster-font-sans);
