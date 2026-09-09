@@ -30,7 +30,7 @@
     "@vitest/browser": "^4.1.11",
     "@vitest/coverage-v8": "^4.1.11",
     "autoprefixer": "^10.5.5",
-    "chromatic": "^17.0.0",
+    "chromatic": "^18.7.2",
     "playwright": "^1.63.0",
     "postcss": "^8.5.28",
     "storybook": "^10.6.0",
