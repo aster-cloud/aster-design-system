@@ -76,6 +76,6 @@
     "@types/mdast": "^4.0.4",
     "@types/node": "^26.5.0",
     "typescript": "^7.0.2",
-    "vitest": "^5.0.0"
+    "vitest": "^4.1.11"
   }
 }

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "Aster brand tokens + UI primitives, shared by aster-cloud and aster-lang-dev",
-  "packageManager": "pnpm@10.28.0",
+  "packageManager": "pnpm@12.3.4",
   "scripts": {
     "build": "pnpm -r --filter=\"./packages/*\" build",
     "storybook": "pnpm --filter=storybook dev",
@@ -12,14 +12,5 @@
   },
   "devDependencies": {
     "typescript": "^7.0.2"
-  },
-  "pnpm": {
-    "overrides": {
-      "esbuild": ">=0.25.0 <0.29.0",
-      "ws": ">=8.21.3 <9",
-      "brace-expansion": ">=5.0.9 <6",
-      "@babel/core": ">=7.29.6 <8",
-      "vite": ">=8.2.2 <9"
-    }
   }
 }
