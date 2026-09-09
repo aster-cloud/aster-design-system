@@ -3,8 +3,19 @@
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": "src",
-    "lib": ["ES2022"],
-    "resolveJsonModule": true
+    "lib": [
+      "ES2022"
+    ],
+    "resolveJsonModule": true,
+    // ★TypeScript 7 起必须显式声明：TS 5 会自动纳入 node_modules/@types 下
+    // 的全部类型包，TS 7 收紧了该行为，不写就找不到 node:fs / process /
+    // Buffer / console 等 Node 全局（报 TS2591 / TS2584）。
+    // @types/node 本就已在 devDependencies，这里只是把隐式依赖写明。
+    "types": [
+      "node"
+    ]
   },
-  "include": ["src/**/*"]
+  "include": [
+    "src/**/*"
+  ]
 }

@@ -1,3 +1,36 @@
 packages:
   - 'packages/*'
   - 'apps/*'
+# ★安全下限（自 package.json 的 pnpm.overrides 迁移而来）。
+#   pnpm 12 起不再读取 package.json 里的 "pnpm" 字段，若不迁移，这些
+#   在 #8 安全 PR 中为修 14 个 Dependabot 告警而设的版本下限会**静默失效**。
+overrides:
+  esbuild: '>=0.25.0 <0.29.0'
+  ws: '>=8.21.3 <9'
+  brace-expansion: '>=5.0.9 <6'
+  '@babel/core': '>=7.29.6 <8'
+  vite: '>=8.2.2 <9'
+
+# esbuild 需要 postinstall 下载/链接平台原生二进制，必须放行。
+allowBuilds:
+  esbuild: true
+minimumReleaseAgeExclude:
+  - '@rolldown/binding-android-arm-eabi@1.2.8'
+  - '@rolldown/binding-android-arm64@1.2.8'
+  - '@rolldown/binding-darwin-arm64@1.2.8'
+  - '@rolldown/binding-darwin-x64@1.2.8'
+  - '@rolldown/binding-freebsd-x64@1.2.8'
+  - '@rolldown/binding-linux-arm-gnueabihf@1.2.8'
+  - '@rolldown/binding-linux-arm64-gnu@1.2.8'
+  - '@rolldown/binding-linux-arm64-musl@1.2.8'
+  - '@rolldown/binding-linux-ppc64-gnu@1.2.8'
+  - '@rolldown/binding-linux-s390x-gnu@1.2.8'
+  - '@rolldown/binding-linux-x64-gnu@1.2.8'
+  - '@rolldown/binding-linux-x64-musl@1.2.8'
+  - '@rolldown/binding-win32-arm64-msvc@1.2.8'
+  - '@rolldown/binding-win32-x64-msvc@1.2.8'
+  - electron-to-chromium@1.5.425
+  - lucide-react@1.43.0
+  - node-releases@2.0.55
+  - obug@2.2.1
+  - rolldown@1.2.8

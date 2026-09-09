@@ -18,6 +18,11 @@
 import { defineConfig } from 'vitest/config';
 import { fileURLToPath } from 'node:url';
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
+// ★Vitest 4 起 browser.provider 由字符串改为工厂函数：
+//   写 provider: 'playwright' 会在启动阶段直接抛
+//   "The `browser.provider` configuration was changed to accept a factory
+//    instead of a string"。provider 实现被拆到独立包 @vitest/browser-playwright。
+import { playwright } from '@vitest/browser-playwright';
 
 const dirname = fileURLToPath(new URL('.', import.meta.url));
 
@@ -42,7 +47,7 @@ export default defineConfig({
     name: 'storybook',
     browser: {
       enabled: true,
-      provider: 'playwright',
+      provider: playwright(),
       headless: true,
       instances: [{ browser: 'chromium' }],
     },

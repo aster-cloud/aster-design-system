@@ -1,8 +1,12 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "CommonJS",
-    "moduleResolution": "Node",
+    "module": "node16",
+    // ★TypeScript 7 移除了 moduleResolution: "Node"（即旧的 node10），
+    // 沿用会直接报 TS5108 而构建失败。CommonJS 产物改用 "node16"：
+    // 它是 TS 现行支持的 Node 解析策略，仍产出 CJS（本包的 main /
+    // exports.require 指向 dist/cjs，是对外发布物，不能丢）。
+    "moduleResolution": "node16",
     "outDir": "dist/cjs",
     "rootDir": "src",
     "declaration": false,
