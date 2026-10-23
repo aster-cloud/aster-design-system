@@ -7,6 +7,9 @@ build/
 *.log
 storybook-static/
 coverage/
+# vitest browser mode 失败时落盘的截图与附件（仅用于本地排查）
+**/__screenshots__/
+.vitest-attachments/
 .env
 .env.local
 # v7 §8.7 — glossary consumer-side cache directory (CI-populated, never committed)

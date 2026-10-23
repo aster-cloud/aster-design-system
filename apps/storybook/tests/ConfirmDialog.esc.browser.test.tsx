@@ -115,6 +115,19 @@ describe('ConfirmDialog Esc', () => {
     expect(dialog()?.open).toBe(true);
   });
 
+  it('非键盘的 UA 关闭请求（如 Android 返回手势）经 close 事件同步 onCancel 一次', async () => {
+    const onCancel = vi.fn();
+    await mount({ isLoading: false, onCancel });
+
+    // 返回手势 / 辅助技术 dismiss 不经 keydown，落到组件的只有 close 事件；
+    // 直接调用 close() 在 DOM 事件层面与之等价。
+    dialog()!.close();
+    await settle();
+
+    expect(onCancel).toHaveBeenCalledTimes(1);
+    expect(dialog()).toBeNull();
+  });
+
   it('未加载时点击背板仍然取消', async () => {
     const onCancel = vi.fn();
     await mount({ isLoading: false, onCancel });

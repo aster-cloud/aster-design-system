@@ -80,24 +80,22 @@ export function ConfirmDialog({
   const cancelRef = useRef<HTMLButtonElement | null>(null);
   const { Icon, iconBg, iconColor, confirmButton } = variantConfig[variant];
 
+  // 关闭从不在这里发生：isOpen 变 false 时组件直接返回 null，<dialog> 随之卸载。
   useEffect(() => {
     const dlg = dialogRef.current;
-    if (!dlg) return;
-    if (isOpen && !dlg.open) {
-      dlg.showModal();
-      // Defer focus so the dialog has actually mounted.
-      setTimeout(() => cancelRef.current?.focus(), 0);
-    } else if (!isOpen && dlg.open) {
-      dlg.close();
-    }
+    if (!dlg || dlg.open) return;
+    dlg.showModal();
+    // Defer focus so the dialog has actually mounted.
+    setTimeout(() => cancelRef.current?.focus(), 0);
   }, [isOpen]);
 
-  // Esc 的唯一处理路径：文档级 keydown。打开时无条件 preventDefault，
-  // 拦截浏览器对 <dialog> 的原生 Esc 关闭（无论是否有用户激活都生效）——
-  // 否则 isLoading 期间 UA 仍会关掉弹窗并经 close 事件触发 onCancel。
+  // Esc 的唯一键盘处理路径：文档级 keydown。打开时无条件 preventDefault，
+  // 拦截浏览器对 <dialog> 的原生 Esc 关闭（Chromium 下无论是否有用户激活
+  // 都生效）——否则 isLoading 期间 UA 仍会关掉弹窗并经 close 事件触发 onCancel。
   useEffect(() => {
+    if (!isOpen) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape' || !isOpen) return;
+      if (e.key !== 'Escape') return;
       e.preventDefault();
       if (!isLoading) onCancel();
     };
@@ -110,6 +108,11 @@ export function ConfirmDialog({
   return (
     <dialog
       ref={dialogRef}
+      // 非键盘的关闭请求（Android 返回手势、辅助技术的 dismiss）不经过 keydown，
+      // 无法 preventDefault，UA 会直接关掉元素并派发 close。这里把它同步给
+      // 消费方，否则 isOpen 仍为 true 而元素已关闭、再也无法 showModal。
+      // Esc 永远到不了这里：上面的 keydown 已经阻止了原生取消路径。
+      onClose={onCancel}
       onClick={(e) => {
         // Backdrop click closes; click inside the panel doesn't.
         if (e.target === e.currentTarget && !isLoading) onCancel();
