@@ -7,7 +7,8 @@
 // CI scripts, Java exporter) treat the throw as fail-closed.
 
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
-import { resolve, join, dirname } from 'node:path';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 import {
   GlossarySchema,
@@ -40,7 +41,9 @@ export interface LoadGlossaryOptions {
  * at runtime — they should use `loadFromExport()` instead.
  */
 export function loadGlossary(opts: LoadGlossaryOptions = {}): Glossary {
-  const root = opts.rootDir ?? resolve(dirname(new URL(import.meta.url).pathname), '..', 'src');
+  // 必须经 fileURLToPath 解码：URL.pathname 是百分号编码串（空格→%20、中文→%E4..），
+  // Windows 下还带前导斜杠（/C:/...），直接当路径用会让 existsSync 误判为文件缺失。
+  const root = opts.rootDir ?? fileURLToPath(new URL('../src/', import.meta.url));
   const localesPath = join(root, 'locales.yaml');
   if (!existsSync(localesPath)) {
     throw new GlossaryValidationError(`locales.yaml not found at ${localesPath}`);

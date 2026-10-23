@@ -8,6 +8,7 @@ import { describe, expect, it } from 'vitest';
 import { mkdtempSync, writeFileSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import {
   createReleaseManifest,
   transitionManifest,
@@ -43,7 +44,7 @@ function mockCdn(): { dir: string; publish: (name: string, body: string) => stri
     dir,
     publish(name, body) {
       writeFileSync(join(dir, name), body, 'utf8');
-      return `file://${join(dir, name)}`;
+      return pathToFileURL(join(dir, name)).href;
     },
   };
 }
@@ -70,7 +71,7 @@ describe('signature integrity (Critical-2 regression)', () => {
     cdn.publish('1.0.0.json', JSON.stringify(tampered));
     await expect(fetchAndVerifyManifest({
       version: '1.0.0',
-      sources: [`file://${cdn.dir}/`],
+      sources: [pathToFileURL(cdn.dir).href],
       cacheDir: mkdtempSync(`${tmpdir()}/cache-`),
       trust: STUB_TRUST,
     })).rejects.toThrow(ManifestSignatureError);
@@ -89,7 +90,7 @@ describe('signature integrity (Critical-2 regression)', () => {
     const cacheDir = mkdtempSync(`${tmpdir()}/cache-`);
     // Prime cache.
     await fetchDenylist({
-      sources: [`file://${cdn.dir}/`],
+      sources: [pathToFileURL(cdn.dir).href],
       cacheDir,
       trust: STUB_TRUST,
     });
@@ -135,7 +136,7 @@ describe('signature integrity (Critical-2 regression)', () => {
     const cdn = mockCdn();
     cdn.publish('denylist.json', JSON.stringify(tampered));
     await expect(fetchDenylist({
-      sources: [`file://${cdn.dir}/`],
+      sources: [pathToFileURL(cdn.dir).href],
       cacheDir: mkdtempSync(`${tmpdir()}/cache-`),
       trust: STUB_TRUST,
     })).rejects.toThrow();
@@ -147,7 +148,7 @@ describe('signature integrity (Critical-2 regression)', () => {
     cdn.publish('1.0.0.json', JSON.stringify(m));
     const outcome = await fetchAndVerifyManifest({
       version: '1.0.0',
-      sources: [`file://${cdn.dir}/`],
+      sources: [pathToFileURL(cdn.dir).href],
       cacheDir: mkdtempSync(`${tmpdir()}/cache-`),
       trust: STUB_TRUST,
     });
@@ -162,7 +163,7 @@ describe('signature integrity (Critical-2 regression)', () => {
     // First call: populates cache from CDN.
     await fetchAndVerifyManifest({
       version: '1.0.0',
-      sources: [`file://${cdn.dir}/`],
+      sources: [pathToFileURL(cdn.dir).href],
       cacheDir,
       trust: STUB_TRUST,
     });
@@ -183,7 +184,7 @@ describe('signature integrity (Critical-2 regression)', () => {
     const cacheDir = mkdtempSync(`${tmpdir()}/cache-`);
     await fetchAndVerifyManifest({
       version: '1.0.0',
-      sources: [`file://${cdn.dir}/`],
+      sources: [pathToFileURL(cdn.dir).href],
       cacheDir,
       trust: STUB_TRUST,
     });
@@ -208,7 +209,7 @@ describe('signature integrity (Critical-2 regression)', () => {
     cdn.publish('1.0.0.json', JSON.stringify(m));
     await expect(fetchAndVerifyManifest({
       version: '1.0.0',
-      sources: [`file://${cdn.dir}/`],
+      sources: [pathToFileURL(cdn.dir).href],
       cacheDir: mkdtempSync(`${tmpdir()}/cache-`),
       // PRODUCTION_TRUST_STORE is empty in this repo; explicit empty also fails.
       trust: { trustedKeysPem: [] },
