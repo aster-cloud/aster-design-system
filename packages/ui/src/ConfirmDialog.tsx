@@ -92,13 +92,14 @@ export function ConfirmDialog({
     }
   }, [isOpen]);
 
-  // Esc → cancel (unless loading, when we want to keep the modal up
-  // until the in-flight action resolves).
+  // Esc 的唯一处理路径：文档级 keydown。打开时无条件 preventDefault，
+  // 拦截浏览器对 <dialog> 的原生 Esc 关闭（无论是否有用户激活都生效）——
+  // 否则 isLoading 期间 UA 仍会关掉弹窗并经 close 事件触发 onCancel。
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen && !isLoading) {
-        onCancel();
-      }
+      if (e.key !== 'Escape' || !isOpen) return;
+      e.preventDefault();
+      if (!isLoading) onCancel();
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
@@ -113,7 +114,6 @@ export function ConfirmDialog({
         // Backdrop click closes; click inside the panel doesn't.
         if (e.target === e.currentTarget && !isLoading) onCancel();
       }}
-      onClose={() => onCancel()}
       className={cn(
         'm-0 w-full max-w-md rounded-xl border border-border bg-bg p-0 shadow-2xl',
         'backdrop:bg-zinc-950/40 backdrop:backdrop-blur-sm',

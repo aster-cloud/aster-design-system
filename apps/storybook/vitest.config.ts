@@ -23,15 +23,22 @@ import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 //   "The `browser.provider` configuration was changed to accept a factory
 //    instead of a string"。provider 实现被拆到独立包 @vitest/browser-playwright。
 import { playwright } from '@vitest/browser-playwright';
+import react from '@vitejs/plugin-react';
 
 const dirname = fileURLToPath(new URL('.', import.meta.url));
 
+// 两个 project 各自一份 Chromium 配置（Vitest 会就地改写 instances，
+// 共用同一对象会报 project 重名）。storybookTest 会接管所属 project 的
+// test.include（并忽略手写值），所以 tests/ 下直接挂载组件的浏览器用例
+// 必须放在独立 project 里，否则永远不会被收集。
+const chromium = () => ({
+  enabled: true,
+  provider: playwright(),
+  headless: true,
+  instances: [{ browser: 'chromium' as const }],
+});
+
 export default defineConfig({
-  plugins: [
-    storybookTest({
-      configDir: `${dirname}.storybook`,
-    }),
-  ],
   // Pre-bundle the deps every story file pulls in. Without this, Vite's
   // first-run discovery triggers a re-optimize mid-test which closes the
   // browser connection and leaves the run with "no tests".
@@ -44,17 +51,30 @@ export default defineConfig({
     ],
   },
   test: {
-    name: 'storybook',
-    browser: {
-      enabled: true,
-      provider: playwright(),
-      headless: true,
-      instances: [{ browser: 'chromium' }],
-    },
-    // No setupFiles needed: Storybook 10.3+ addon-vitest auto-applies
-    // preview annotations (decorators / parameters / globalTypes) to every
-    // test, so an explicit setProjectAnnotations() call would just
-    // conflict.
+    projects: [
+      {
+        extends: true,
+        plugins: [
+          storybookTest({
+            configDir: `${dirname}.storybook`,
+          }),
+        ],
+        // No setupFiles needed: Storybook 10.3+ addon-vitest auto-applies
+        // preview annotations (decorators / parameters / globalTypes) to every
+        // test, so an explicit setProjectAnnotations() call would just
+        // conflict.
+        test: { name: 'storybook', browser: chromium() },
+      },
+      {
+        extends: true,
+        plugins: [react()],
+        test: {
+          name: 'browser',
+          include: ['tests/**/*.browser.test.{ts,tsx}'],
+          browser: chromium(),
+        },
+      },
+    ],
     coverage: {
       provider: 'v8',
       /*
