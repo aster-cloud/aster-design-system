@@ -5,6 +5,18 @@ All notable changes to this package are documented here. Semantic versioning
 
 ## [Unreleased]
 
+### Fixed
+- CJS consumers under TypeScript `moduleResolution: node16` (a project without
+  `"type": "module"` importing `@aster-cloud/tokens` or
+  `@aster-cloud/tokens/tailwind-preset`) failed typecheck with TS1479: the
+  `exports` map had a single `types` pointing at the ESM declarations while
+  `dist/cjs` shipped no `.d.ts` at all. `tsconfig.cjs.json` now emits
+  declarations, and both `exports` entries nest `types` per condition
+  (`import` → `dist/esm/*.d.ts`, `require` → `dist/cjs/*.d.ts`). Runtime
+  resolution is unchanged. A post-build check (`scripts/check-exports.mjs`,
+  also `pnpm test`) now fails the build if any `exports` path is missing on
+  disk or a dual-format entry drops its nested `types`.
+
 ### Added
 - `--aster-shadow-ring-danger` semantic token (exposed as Tailwind
   `shadow-ring-danger`): the danger/invalid focus-ring shadow, mirroring

@@ -16,16 +16,26 @@
   "types": "./dist/esm/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/esm/index.d.ts",
-      "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.js",
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.js"
+      },
       "default": "./dist/cjs/index.js"
     },
     "./tokens.css": "./dist/tokens.css",
     "./tailwind-preset": {
-      "types": "./dist/esm/tailwind-preset.d.ts",
-      "import": "./dist/esm/tailwind-preset.js",
-      "require": "./dist/cjs/tailwind-preset.js",
+      "import": {
+        "types": "./dist/esm/tailwind-preset.d.ts",
+        "default": "./dist/esm/tailwind-preset.js"
+      },
+      "require": {
+        "types": "./dist/cjs/tailwind-preset.d.ts",
+        "default": "./dist/cjs/tailwind-preset.js"
+      },
       "default": "./dist/cjs/tailwind-preset.js"
     },
     "./package.json": "./package.json"
@@ -35,8 +45,9 @@
     "src"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.esm.json && tsc -p tsconfig.cjs.json && node ./scripts/postbuild.mjs",
-    "typecheck": "tsc -p tsconfig.esm.json --noEmit"
+    "build": "tsc -p tsconfig.esm.json && tsc -p tsconfig.cjs.json && node ./scripts/postbuild.mjs && node ./scripts/check-exports.mjs",
+    "typecheck": "tsc -p tsconfig.esm.json --noEmit",
+    "test": "node ./scripts/check-exports.mjs"
   },
   "devDependencies": {
     "typescript": "^7.0.2"
