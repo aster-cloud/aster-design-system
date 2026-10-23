@@ -10,9 +10,9 @@ friction.
 
 | Package | Role | Published to npm? | Consumers |
 |---|---|---|---|
-| `@aster-cloud/tokens` | CSS variables + JS/TS exports of the brand system (color/typography/spacing/radius/shadow/motion). No framework dependencies. Build output: `dist/esm/` (ESM + `.d.ts`), `dist/cjs/` (CommonJS), `dist/tokens.css`. Subpath exports: `.` (token objects, default export is the Tailwind preset), `./tokens.css`, `./tailwind-preset`. | Yes | aster-cloud (via `./tailwind-preset`), aster-lang-dev (via `./tokens.css` in the VitePress theme override) |
+| `@aster-cloud/tokens` | CSS variables + JS/TS exports of the brand system (color/typography/spacing/radius/shadow/motion). No framework dependencies. Build output: `dist/esm/` (ESM + `.d.ts`), `dist/cjs/` (CommonJS + `.d.ts`), `dist/tokens.css`. Subpath exports: `.` (token objects, default export is the Tailwind preset), `./tokens.css`, `./tailwind-preset`. | Yes | aster-cloud (via `./tailwind-preset`), aster-lang-dev (via `./tokens.css` in the VitePress theme override) |
 | `@aster-cloud/ui` | React component primitives (Button, Card, Input, Dialog, …) built on top of `@aster-cloud/tokens`. Uses `class-variance-authority` for variants. ESM-only `dist/`. | Yes | aster-cloud only — aster-lang-dev is Vue/VitePress and consumes only the tokens. |
-| `@aster-cloud/glossary` | Single source of truth for cross-locale terminology (`src/terms/`, `src/locales.yaml`) plus the scanner library. Subpath exports: `./loader`, `./scanner`, `./manifest`, `./denylist`, `./schema`, `./locale-utils`, `./export-json`, `./terms`, `./locales`. Published with npm provenance. | Yes | aster-cloud `check-glossary`, aster-lang-dev `check-locale-parity` |
+| `@aster-cloud/glossary` | Single source of truth for cross-locale terminology (`src/terms/`, `src/locales.yaml`) plus the scanner library. Subpath exports: `./loader`, `./scanner`, `./manifest`, `./denylist`, `./schema`, `./locale-utils`, `./export-json`, `./locales`. Published with npm provenance. | Yes | aster-cloud `check-glossary`, aster-lang-dev `check-locale-parity` |
 | `@aster-cloud/glossary-fmt` | Formatter + linter CLI (`glossary-fmt`) for `glossary:block` markers in Markdown. Depends on `@aster-cloud/glossary`. | **No — workspace-only.** It has no step in `publish.yml` and does not exist on the registry; its `publishConfig` is not a publish decision. | This repo only |
 
 ## Brand basics
@@ -66,8 +66,8 @@ npm login --scope=@aster-cloud --registry=https://registry.npmjs.org
 pnpm build
 pnpm --filter @aster-cloud/tokens   publish --no-git-checks --access=public
 pnpm --filter @aster-cloud/ui       publish --no-git-checks --access=public
-# glossary opts into provenance, which only works with CI OIDC. A local
-# publish must switch it off or npm refuses with "provenance requires CI".
+# glossary opts into provenance (publishConfig.provenance: true), which npm
+# can only mint from a CI OIDC identity. A local publish must switch it off.
 pnpm --filter @aster-cloud/glossary publish --no-git-checks --access=public --provenance=false
 ```
 
