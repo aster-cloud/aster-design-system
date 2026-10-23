@@ -11,7 +11,6 @@ import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import {
   cpSync,
-  existsSync,
   mkdirSync,
   mkdtempSync,
   rmSync,
@@ -26,23 +25,25 @@ import { fetchWithRetry } from '../../src/fetch-utils.js';
 const here = dirname(fileURLToPath(import.meta.url));
 const pkgRoot = resolve(here, '..', '..');
 
-/** 本测试依赖当前源码对应的 dist；缺失时就地编译，避免「未 build 就跑测试」误报。 */
-function ensureDist(): void {
-  if (existsSync(join(pkgRoot, 'dist', 'index.js'))) return;
+/**
+ * 每次都把当前源码编译到临时安装目录，而不是复用 pkgRoot/dist：
+ * dist 过期时复用会让测试考验陈旧产物——源码被改坏也不会变红。编译约 1–2 秒。
+ */
+function compileSrcInto(outDir: string): void {
   const require = createRequire(import.meta.url);
   const tscBin = join(dirname(require.resolve('typescript/package.json')), 'bin', 'tsc');
-  execFileSync(process.execPath, [tscBin, '-p', pkgRoot], { stdio: 'inherit' });
+  execFileSync(process.execPath, [tscBin, '-p', pkgRoot, '--outDir', outDir], { stdio: 'inherit' });
 }
 
 let tmpRoot: string;
 let installDir: string;
 
 beforeAll(() => {
-  ensureDist();
   tmpRoot = mkdtempSync(join(tmpdir(), 'aster glossary #'));
   installDir = join(tmpRoot, 'node_modules', '@aster-cloud', 'glossary');
   mkdirSync(installDir, { recursive: true });
-  for (const entry of ['dist', 'src', 'package.json']) {
+  compileSrcInto(join(installDir, 'dist'));
+  for (const entry of ['src', 'package.json']) {
     cpSync(join(pkgRoot, entry), join(installDir, entry), { recursive: true });
   }
   // 运行时依赖（yaml / zod）复用本包已安装的 node_modules，避免在临时目录重新安装。
