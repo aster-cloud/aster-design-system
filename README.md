@@ -8,10 +8,12 @@ friction.
 
 ## Packages
 
-| Package | Role | Consumers |
-|---|---|---|
-| `@aster-cloud/tokens` | CSS variables + JS/TS exports of the brand system (color/typography/spacing/radius/shadow/motion). Output formats: `tokens.css`, `tokens.js`, `tokens.d.ts`. No framework dependencies. | aster-cloud (via Tailwind config), aster-lang-dev (via VitePress theme override) |
-| `@aster-cloud/ui` | React component primitives (Button, Card, Input, Dialog, …) built on top of `@aster-cloud/tokens`. Uses `class-variance-authority` for variants. | aster-cloud only — aster-lang-dev is Vue/VitePress and consumes only the tokens. |
+| Package | Role | Published to npm? | Consumers |
+|---|---|---|---|
+| `@aster-cloud/tokens` | CSS variables + JS/TS exports of the brand system (color/typography/spacing/radius/shadow/motion). No framework dependencies. Build output: `dist/esm/` (ESM + `.d.ts`), `dist/cjs/` (CommonJS + `.d.ts`), `dist/tokens.css`. Subpath exports: `.` (token objects, default export is the Tailwind preset), `./tokens.css`, `./tailwind-preset`. | Yes | aster-cloud (`./tokens.css` in `globals.css` + named colour exports from `.`), aster-dev (`./tokens.css`), aster-lang-dev (`./tokens.css` in the VitePress theme override). `./tailwind-preset` currently has no consumer (all three are on Tailwind 4 without a `tailwind.config.*`) |
+| `@aster-cloud/ui` | React component primitives (Button, Card, Input, Dialog, …) built on top of `@aster-cloud/tokens`. Uses `class-variance-authority` for variants. ESM-only `dist/`. | Yes | aster-cloud only — aster-lang-dev is Vue/VitePress and consumes only the tokens. |
+| `@aster-cloud/glossary` | Single source of truth for cross-locale terminology (`src/terms/`, `src/locales.yaml`) plus the scanner library. Subpath exports: `./loader`, `./scanner`, `./manifest`, `./denylist`, `./schema`, `./locale-utils`, `./export-json`, `./locales`. Published with npm provenance. | Yes | aster-cloud `check-glossary`, aster-lang-dev `check-locale-parity` |
+| `@aster-cloud/glossary-fmt` | Formatter + linter CLI (`glossary-fmt`) for `glossary:block` markers in Markdown. Depends on `@aster-cloud/glossary`. | **No — workspace-only.** It has no step in `publish.yml` and does not exist on the registry; its `publishConfig` is not a publish decision. | This repo only |
 
 ## Brand basics
 
@@ -23,11 +25,15 @@ friction.
 
 ## Workflow
 
-1. Develop tokens/components in `packages/`.
+1. Develop tokens/components/glossary in `packages/`.
 2. Preview in `apps/storybook` (`pnpm storybook`).
-3. Bump version in `packages/*/package.json`, commit, then tag `vX.Y.Z`.
-   The `Publish` workflow fires on tag push and ships both packages to
-   GitHub Packages.
+3. Bump the version of each package you changed in `packages/*/package.json`,
+   commit, then tag `vX.Y.Z`. The `Publish` workflow fires on tag push, runs
+   the quality gate (build → typecheck → Storybook story tests in chromium),
+   then publishes `@aster-cloud/tokens`, `@aster-cloud/ui` and
+   `@aster-cloud/glossary` to **public npm**. A package whose version is
+   already on the registry is skipped, so a ui-only bump does not force a
+   tokens or glossary bump.
 
 ## Publishing
 
@@ -39,24 +45,37 @@ registry configuration.
 Tag-driven release:
 
 ```bash
-# 1. Bump versions in packages/tokens + packages/ui
+# 1. Bump versions in packages/tokens, packages/ui and/or packages/glossary
 # 2. Commit + tag
 git tag v0.1.1
 git push origin v0.1.1
 ```
 
-The `Publish` workflow fires on the tag and ships both packages.
+The `Publish` workflow (`.github/workflows/publish.yml`) fires on the tag and
+ships the three packages in dependency order: tokens → ui → glossary. It can
+also be started by hand (`workflow_dispatch`) to republish without retagging.
 Required: `NPM_TOKEN` GitHub secret with `publish` access to the
-`@aster-cloud` scope on npmjs.org.
+`@aster-cloud` scope on npmjs.org. The job runs with `id-token: write` because
+`@aster-cloud/glossary` sets `publishConfig.provenance: true` and npm mints the
+attestation from the GitHub Actions OIDC identity.
 
 Manual publish (only if CI is broken):
 
 ```bash
 npm login --scope=@aster-cloud --registry=https://registry.npmjs.org
 pnpm build
-pnpm --filter @aster-cloud/tokens publish --no-git-checks --access=public
-pnpm --filter @aster-cloud/ui     publish --no-git-checks --access=public
+pnpm --filter @aster-cloud/tokens   publish --no-git-checks --access=public
+pnpm --filter @aster-cloud/ui       publish --no-git-checks --access=public
+# glossary opts into provenance (publishConfig.provenance: true), which npm
+# can only mint from a CI OIDC identity. A local publish must switch it off.
+# pnpm's --provenance is a boolean switch: `--provenance=false` is rejected by
+# the pnpm 12 CLI, so use the negated form (verified with --dry-run on 12.3.4).
+pnpm --filter @aster-cloud/glossary publish --no-git-checks --access=public --no-provenance
 ```
+
+`@aster-cloud/glossary-fmt` is **not** part of either path: it is currently
+workspace-only (consumed inside this repo via `workspace:*`) and is not
+published to npm. Do not add it to the commands above unless that changes.
 
 ## Consuming from aster-cloud / aster-lang-dev
 

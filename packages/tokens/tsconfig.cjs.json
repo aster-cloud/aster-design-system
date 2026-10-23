@@ -9,8 +9,13 @@
     "moduleResolution": "node16",
     "outDir": "dist/cjs",
     "rootDir": "src",
-    "declaration": false,
-    "declarationMap": false,
+    // ★CJS 产物必须自带 .d.ts：dist/cjs/package.json 标 commonjs，
+    // 这里生成的声明才会被 TS 当作 CJS 模块。若 CJS 消费方（node16
+    // 解析、无 "type":"module"）被 exports 指到 dist/esm 的声明，
+    // TS 会按 ESM 处理并报 TS1479「不能用 require 导入」——运行时
+    // require() 明明正常，类型却说不行。
+    "declaration": true,
+    "declarationMap": true,
     "verbatimModuleSyntax": false
   },
   "include": ["src/**/*"]

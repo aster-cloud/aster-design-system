@@ -12,6 +12,7 @@
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { randomBytes } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
 
 export interface FetchRetryOptions {
   timeoutMs: number;
@@ -25,12 +26,14 @@ export interface FetchRetryOptions {
  */
 export async function fetchWithRetry(url: string, opts: FetchRetryOptions): Promise<string> {
   if (url.startsWith('file://')) {
-    const path = url.slice('file://'.length);
+    // 必须经 fileURLToPath 解码：裸切前缀会把 %20 等转义原样当路径用，
+    // Windows 下更会多出前导斜杠。解码本身也可能抛（非法 file URL），
+    // 与 ENOENT 一并归为「源不可达」，让调用方走多源回退/缓存路径。
     try {
-      return readFileSync(path, 'utf8');
+      return readFileSync(fileURLToPath(url), 'utf8');
     } catch (e) {
       throw new Error(
-        `HTTP 404 (file not found): ${path}${e instanceof Error ? ` — ${e.message}` : ''}`,
+        `HTTP 404 (file not found): ${url}${e instanceof Error ? ` — ${e.message}` : ''}`,
       );
     }
   }

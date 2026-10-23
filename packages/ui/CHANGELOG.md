@@ -5,6 +5,15 @@ All notable changes to this package are documented here. Semantic versioning
 
 ## [Unreleased]
 
+### Fixed
+- `ConfirmDialog`: Esc is now handled only by the document-level `keydown`
+  listener, which calls `preventDefault()` so the browser's native `<dialog>`
+  Esc path never fires. Previously the native path still closed the dialog
+  while `isLoading` and triggered `onCancel` a second time through `close`,
+  leaving `isOpen` true with the element already closed. Non-keyboard close
+  requests (Android back gesture, assistive-technology dismiss) still reach
+  `onClose` and are forwarded to `onCancel` once. Props are unchanged.
+
 ### Changed
 - Input and Textarea invalid-state focus rings now use the new
   `shadow-ring-danger` token instead of a hardcoded rose shadow value

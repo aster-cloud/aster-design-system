@@ -17,6 +17,7 @@
 import { describe, expect, it } from 'vitest';
 import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { tmpdir } from 'node:os';
 import { mkdtempSync } from 'node:fs';
 import {
@@ -46,8 +47,8 @@ function mockCdn(dir: string) {
     dir,
     publish(filename: string, body: string): string {
       writeFileSync(join(dir, filename), body, 'utf8');
-      // Return a "file://" URL the fetch helpers can resolve.
-      return `file://${join(dir, filename)}`;
+      // 经 pathToFileURL 生成合法 file:// URL：tmpdir 含空格/%#? 时裸拼接会被 fileURLToPath 解码出错。
+      return pathToFileURL(join(dir, filename)).href;
     },
   };
 }
@@ -171,7 +172,7 @@ describe('manifest verify (G8b consumer)', () => {
 
     await expect(fetchAndVerifyManifest({
       version: '1.0.0',
-      sources: [`file://${cdn.dir}/`],
+      sources: [pathToFileURL(cdn.dir).href],
       cacheDir: mkdtempSync(`${tmpdir()}/cache-`),
       trust: STUB_TRUST,
     })).rejects.toThrow(ManifestStateError);
@@ -188,7 +189,7 @@ describe('manifest verify (G8b consumer)', () => {
 
     const outcome = await fetchAndVerifyManifest({
       version: '1.0.0',
-      sources: [`file://${cdn.dir}/`],
+      sources: [pathToFileURL(cdn.dir).href],
       cacheDir: mkdtempSync(`${tmpdir()}/cache-`),
       trust: STUB_TRUST,
     });
@@ -208,7 +209,7 @@ describe('manifest verify (G8b consumer)', () => {
 
     await expect(fetchAndVerifyManifest({
       version: '1.0.1',
-      sources: [`file://${cdn.dir}/`],
+      sources: [pathToFileURL(cdn.dir).href],
       cacheDir: mkdtempSync(`${tmpdir()}/cache-`),
       trust: STUB_TRUST,
     })).rejects.toThrow(/manifest version mismatch/);
@@ -230,7 +231,7 @@ describe('denylist fetch (G8b consumer)', () => {
     cdn.publish('denylist.json', JSON.stringify(dl));
 
     const outcome = await fetchDenylist({
-      sources: [`file://${cdn.dir}/`],
+      sources: [pathToFileURL(cdn.dir).href],
       cacheDir: mkdtempSync(`${tmpdir()}/cache-`),
       trust: STUB_TRUST,
     });
@@ -249,7 +250,7 @@ describe('denylist fetch (G8b consumer)', () => {
     // cdn is intentionally empty — fetch will 404, fall through to github.
 
     const outcome = await fetchDenylist({
-      sources: [`file://${cdn.dir}/`, `file://${github.dir}/`],
+      sources: [pathToFileURL(cdn.dir).href, pathToFileURL(github.dir).href],
       cacheDir: mkdtempSync(`${tmpdir()}/cache-`),
       trust: STUB_TRUST,
     });
