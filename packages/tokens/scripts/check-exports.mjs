@@ -11,6 +11,12 @@
  *   3. dist/esm、dist/cjs 的 package.json 必须分别标 module / commonjs，
  *      否则上面的 .d.ts 会被 TS 按错误的模块格式解读。
  * 任一条不满足即退出码 1，使 build 与发布门失败。
+ *
+ * 为什么不用生态工具 @arethetypeswrong/cli（issue 原文提到的 attw --pack）：
+ * attw 以消费方视角做完整解析，更标准；但它要新增 devDependency 并在 build
+ * 内执行 npm pack，而本检查需要零依赖、离线、紧跟 tsc 之后秒级完成。
+ * 这是对「生态复用优先」准则记录在案的特例：若日后 attw 进入发布门，应以其
+ * 替换本脚本，而非并行维护两套。
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -26,7 +32,10 @@ function* leaves(node, trail) {
   for (const [key, child] of Object.entries(node)) yield* leaves(child, `${trail} › ${key}`);
 }
 
-for (const [trail, file] of leaves(pkg.exports, 'exports')) {
+// 顶层 main / module / types 是 node10 解析的回退入口，与 exports 一起核对。
+const ENTRY_FIELDS = ['main', 'module', 'types'].filter((f) => f in pkg);
+const entryMap = { ...Object.fromEntries(ENTRY_FIELDS.map((f) => [f, pkg[f]])), exports: pkg.exports };
+for (const [trail, file] of leaves(entryMap, 'package.json')) {
   if (!existsSync(resolve(pkgDir, file))) failures.push(`${trail} 指向的文件不存在：${file}`);
 }
 
