@@ -10,7 +10,7 @@ friction.
 
 | Package | Role | Published to npm? | Consumers |
 |---|---|---|---|
-| `@aster-cloud/tokens` | CSS variables + JS/TS exports of the brand system (color/typography/spacing/radius/shadow/motion). No framework dependencies. Build output: `dist/esm/` (ESM + `.d.ts`), `dist/cjs/` (CommonJS + `.d.ts`), `dist/tokens.css`. Subpath exports: `.` (token objects, default export is the Tailwind preset), `./tokens.css`, `./tailwind-preset`. | Yes | aster-cloud (via `./tailwind-preset`), aster-lang-dev (via `./tokens.css` in the VitePress theme override) |
+| `@aster-cloud/tokens` | CSS variables + JS/TS exports of the brand system (color/typography/spacing/radius/shadow/motion). No framework dependencies. Build output: `dist/esm/` (ESM + `.d.ts`), `dist/cjs/` (CommonJS + `.d.ts`), `dist/tokens.css`. Subpath exports: `.` (token objects, default export is the Tailwind preset), `./tokens.css`, `./tailwind-preset`. | Yes | aster-cloud (`./tokens.css` in `globals.css` + named colour exports from `.`), aster-dev (`./tokens.css`), aster-lang-dev (`./tokens.css` in the VitePress theme override). `./tailwind-preset` currently has no consumer (all three are on Tailwind 4 without a `tailwind.config.*`) |
 | `@aster-cloud/ui` | React component primitives (Button, Card, Input, Dialog, …) built on top of `@aster-cloud/tokens`. Uses `class-variance-authority` for variants. ESM-only `dist/`. | Yes | aster-cloud only — aster-lang-dev is Vue/VitePress and consumes only the tokens. |
 | `@aster-cloud/glossary` | Single source of truth for cross-locale terminology (`src/terms/`, `src/locales.yaml`) plus the scanner library. Subpath exports: `./loader`, `./scanner`, `./manifest`, `./denylist`, `./schema`, `./locale-utils`, `./export-json`, `./locales`. Published with npm provenance. | Yes | aster-cloud `check-glossary`, aster-lang-dev `check-locale-parity` |
 | `@aster-cloud/glossary-fmt` | Formatter + linter CLI (`glossary-fmt`) for `glossary:block` markers in Markdown. Depends on `@aster-cloud/glossary`. | **No — workspace-only.** It has no step in `publish.yml` and does not exist on the registry; its `publishConfig` is not a publish decision. | This repo only |
@@ -68,7 +68,9 @@ pnpm --filter @aster-cloud/tokens   publish --no-git-checks --access=public
 pnpm --filter @aster-cloud/ui       publish --no-git-checks --access=public
 # glossary opts into provenance (publishConfig.provenance: true), which npm
 # can only mint from a CI OIDC identity. A local publish must switch it off.
-pnpm --filter @aster-cloud/glossary publish --no-git-checks --access=public --provenance=false
+# pnpm's --provenance is a boolean switch: `--provenance=false` is rejected by
+# the pnpm 12 CLI, so use the negated form (verified with --dry-run on 12.3.4).
+pnpm --filter @aster-cloud/glossary publish --no-git-checks --access=public --no-provenance
 ```
 
 `@aster-cloud/glossary-fmt` is **not** part of either path: it is currently
