@@ -70,7 +70,12 @@ jobs:
 
       # 浏览器用例与 storybook.yml 保持同一套（含 --with-deps 装系统依赖）。
       # 这一步较慢，但发布是低频操作，用它换「不发未验证的包」是划算的。
+      #
+      # ★必须在 apps/storybook 下执行：playwright 只是该应用的 devDependency，
+      #   根 node_modules/.bin 仅有 tsc，`pnpm exec` 不会跨 workspace 找 bin，
+      #   在根目录会以 ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL 中断整个发布 job。
       - name: Install Playwright chromium
+        working-directory: apps/storybook
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Test stories (vitest + chromium)
