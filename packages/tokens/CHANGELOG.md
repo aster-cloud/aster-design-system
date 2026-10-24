@@ -5,6 +5,8 @@ All notable changes to this package are documented here. Semantic versioning
 
 ## [Unreleased]
 
+## [0.2.1] — 2026-10-25
+
 ### Fixed
 - CJS consumers under TypeScript `moduleResolution: node16` (a project without
   `"type": "module"` importing `@aster-cloud/tokens` or

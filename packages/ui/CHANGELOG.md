@@ -5,6 +5,8 @@ All notable changes to this package are documented here. Semantic versioning
 
 ## [Unreleased]
 
+## [0.3.1] — 2026-10-25
+
 ### Fixed
 - `ConfirmDialog`: Esc is now handled only by the document-level `keydown`
   listener, which calls `preventDefault()` so the browser's native `<dialog>`
