@@ -5,6 +5,14 @@ All notable changes to this package are documented here. Semantic versioning
 
 ## [Unreleased]
 
+## [0.3.2] — 2026-11-16
+
+### Fixed
+- `DataTable`: the scroll region is `relative`, so `srHeader` columns (sr-only, absolutely positioned) no longer escape
+  `overflow-x-auto` and widen the page on mobile.
+- `Breadcrumbs`: the trail wraps (`min-w-0` + `flex-wrap`) instead of overflowing narrow viewports, and links get a
+  44px tap target below `sm` via padding offset by negative margin (layout unchanged).
+
 ## [0.3.1] — 2026-10-25
 
 ### Fixed

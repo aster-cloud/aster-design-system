@@ -5,6 +5,20 @@ All notable changes to this package are documented here. Semantic versioning
 
 ## [Unreleased]
 
+## [0.2.2] — 2026-11-16
+
+### Fixed
+- Every semantic foreground/background pair now meets WCAG AA (4.5:1 text, 3:1 focus rings) in light, dark and the
+  `prefers-color-scheme` fallback; `scripts/check-contrast.mjs` enforces it in `build` / `test` (`pnpm contrast:table`
+  prints all 196 pairs).
+  - light `--aster-fg-subtle`: zinc-500 → `#686871` (OKLCH L 0.552 → 0.52, same hue/chroma); on bg-muted 4.40 → 5.02.
+  - dark `--aster-danger`: rose-500 → rose-400; on bg-muted 4.06 → 5.53, zinc-950 on it 7.39.
+  - `--aster-shadow-ring` / `--aster-shadow-ring-danger` are opaque (light ring was 1.57:1 on white → 4.23); dark
+    `--aster-primary-ring` is violet-400 (3.52 → 5.47 on bg-muted).
+- `--aster-color-emerald-200` / `amber-200` / `rose-200` were referenced by `--aster-border-*-subtle` but never defined.
+- `semantic` in `color.ts` drifted from `tokens.css` (success / warning / danger / fgSubtle); aligned and guarded by
+  `scripts/check-semantic-sync.mjs`.
+
 ## [0.2.1] — 2026-10-25
 
 ### Fixed
