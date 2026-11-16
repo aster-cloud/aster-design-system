@@ -9,8 +9,9 @@ All notable changes to this package are documented here. Semantic versioning
 
 ### Fixed
 - Every semantic foreground/background pair now meets WCAG AA (4.5:1 text, 3:1 focus rings) in light, dark and the
-  `prefers-color-scheme` fallback; `scripts/check-contrast.mjs` enforces it in `build` / `test` (`pnpm contrast:table`
-  prints all 196 pairs).
+  `prefers-color-scheme` fallback, with translucent `*-subtle` tints composited over each surface;
+  `scripts/check-contrast.mjs` enforces it in `build` / `test` (`pnpm contrast:table` prints all 216 pairs).
+  - dark `--aster-primary-subtle`: violet-500 @ 0.18 → 0.15 (violet-400 text on it over bg-muted 4.49 → 4.65).
   - light `--aster-fg-subtle`: zinc-500 → `#686871` (OKLCH L 0.552 → 0.52, same hue/chroma); on bg-muted 4.40 → 5.02.
   - dark `--aster-danger`: rose-500 → rose-400; on bg-muted 4.06 → 5.53, zinc-950 on it 7.39.
   - `--aster-shadow-ring` / `--aster-shadow-ring-danger` are opaque (light ring was 1.57:1 on white → 4.23); dark
@@ -73,6 +74,7 @@ All notable changes to this package are documented here. Semantic versioning
 - Light + dark mode parity via `[data-theme]` attribute selector.
 - ESM + CJS dual output; types via `index.d.ts`.
 
-[Unreleased]: https://github.com/aster-cloud/aster-design-system/compare/tokens-v0.2.0...HEAD
+[Unreleased]: https://github.com/aster-cloud/aster-design-system/compare/v0.3.3...HEAD
+[0.2.2]: https://github.com/aster-cloud/aster-design-system/compare/v0.3.2...v0.3.3
 [0.2.0]: https://github.com/aster-cloud/aster-design-system/compare/tokens-v0.1.0...tokens-v0.2.0
 [0.1.0]: https://github.com/aster-cloud/aster-design-system/releases/tag/tokens-v0.1.0

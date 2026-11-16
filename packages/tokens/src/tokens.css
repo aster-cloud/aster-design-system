@@ -250,10 +250,12 @@
 /* Dark theme — explicit attribute wins; OS-driven fallback at the bottom. */
 [data-theme="dark"] {
   /*
-   * Dark-mode primary is violet-400 (not -500). text-primary on the
-   * 0.18-alpha primary-subtle tint over zinc-950 was 3.98:1 with -500;
-   * -400 raises that to ~5.1:1 (clears AA). bg-primary with zinc-950
-   * primary-fg goes from 7.71 to 11.0 — well within range.
+   * Dark-mode primary is violet-400 (not -500), measured by scripts/check-contrast.mjs:
+   *   text-primary on primary-subtle (violet-500 @ 0.15) over bg / bg-subtle / bg-muted = 6.45 / 5.56 / 4.65,
+   *   on bg / bg-subtle / bg-muted = 7.31 / 6.51 / 5.47; primary-fg zinc-950 on it = 7.31.
+   * Why not a darker violet with white text: white needs relative luminance ≤ 0.183, and
+   * that same token used as text on zinc-950 then tops out at 4.40:1 — no single violet
+   * clears 4.5:1 both ways, so dark fills carry dark text (aster-cloud#774).
    */
   --aster-primary:        var(--aster-color-violet-400);
   --aster-primary-hover:  var(--aster-color-violet-300);
@@ -267,10 +269,10 @@
    */
   --aster-primary-fg:     var(--aster-color-zinc-950);
   /*
-   * primary-subtle alpha bumped 0.12 → 0.18 so violet-500 text on the
-   * dark-mode subtle tint clears 4.5:1 (was 4.26:1 at 0.12 over zinc-950).
+   * primary-subtle alpha 0.15: the tint can sit on bg-muted cards too, where
+   * violet-400 text on a 0.18 tint was 4.49:1; 0.15 gives ≥4.65 on every surface.
    */
-  --aster-primary-subtle: rgb(139 92 246 / 0.18);
+  --aster-primary-subtle: rgb(139 92 246 / 0.15);
   /* 暗色焦点环用 violet-400：在 bg-muted 上 5.47:1（violet-500 仅 3.52）（aster-cloud#774） */
   --aster-primary-ring:   var(--aster-color-violet-400);
 
@@ -336,7 +338,7 @@
     --aster-primary-active: var(--aster-color-violet-200);
     /* Match [data-theme="dark"]: dark fg on light brand fills for AA. */
     --aster-primary-fg:     var(--aster-color-zinc-950);
-    --aster-primary-subtle: rgb(139 92 246 / 0.18);
+    --aster-primary-subtle: rgb(139 92 246 / 0.15);
     /* 暗色焦点环用 violet-400：在 bg-muted 上 5.47:1（violet-500 仅 3.52）（aster-cloud#774） */
     --aster-primary-ring:   var(--aster-color-violet-400);
     --aster-accent:         var(--aster-color-sky-400);

@@ -12,16 +12,21 @@ const { semantic } = await import(pathToFileURL(resolve(pkgDir, 'dist/esm/color.
 const css = readFileSync(resolve(pkgDir, 'src/tokens.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
 const root = css.slice(css.indexOf(':root'), css.indexOf('\n}', css.indexOf(':root')));
 const decl = Object.fromEntries(Array.from(root.matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g), (m) => [m[1], m[2].trim()]));
-const resolveHex = (name) => {
+const resolveHex = (name, seen = new Set()) => {
+  if (seen.has(name)) throw new Error(`循环引用 ${name}`);
+  seen.add(name);
   const v = decl[name];
-  const ref = /^var\((--[\w-]+)\)$/.exec(v ?? '');
-  return ref ? resolveHex(ref[1]) : v?.toLowerCase();
+  if (v === undefined) return undefined;
+  const ref = /^var\((--[\w-]+)\)$/.exec(v);
+  return ref ? resolveHex(ref[1], seen) : v.toLowerCase();
 };
 const kebab = (k) => k.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
 const drift = [];
 for (const [key, hex] of Object.entries(semantic)) {
   const cssHex = resolveHex(`--aster-${kebab(key)}`);
-  if (cssHex && cssHex !== String(hex).toLowerCase()) drift.push(`semantic.${key} = ${hex}，tokens.css = ${cssHex}`);
+  // 缺失也算漂移：semantic 新增字段而 CSS 没有对应变量时不能静默通过
+  if (cssHex === undefined) drift.push(`semantic.${key} 在 tokens.css :root 中没有 --aster-${kebab(key)}`);
+  else if (cssHex !== String(hex).toLowerCase()) drift.push(`semantic.${key} = ${hex}，tokens.css = ${cssHex}`);
 }
 if (drift.length) {
   console.error(`[check-semantic-sync] color.ts 与 tokens.css 不一致：\n  ${drift.join('\n  ')}`);

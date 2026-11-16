@@ -41,17 +41,37 @@ const THEMES = {
   'dark (prefers-color-scheme)': { ...ROOT, ...block(/:root:not\(\[data-theme="light"\]\)\s*\{/) },
 };
 
+/** 支持 #rgb / #rrggbb / #rrggbbaa、rgb()/rgba()（整数或百分比通道，逗号或空格分隔）、hsl()/hsla()；其余格式直接报错，不静默放过 */
 function parseColor(v) {
-  let m = /^#([0-9a-f]{6})$/i.exec(v);
-  if (m) return { r: parseInt(m[1].slice(0, 2), 16), g: parseInt(m[1].slice(2, 4), 16), b: parseInt(m[1].slice(4), 16), a: 1 };
-  m = /^rgba?\(\s*(\d+)[\s,]+(\d+)[\s,]+(\d+)\s*(?:[/,]\s*([\d.]+%?))?\s*\)$/i.exec(v);
+  const s = v.trim();
+  let m = /^#([0-9a-f]{3,8})$/i.exec(s);
+  if (m && [3, 6, 8].includes(m[1].length)) {
+    const h = m[1].length === 3 ? m[1].replace(/./g, '$&$&') : m[1];
+    return { r: parseInt(h.slice(0, 2), 16), g: parseInt(h.slice(2, 4), 16), b: parseInt(h.slice(4, 6), 16), a: h.length === 8 ? parseInt(h.slice(6), 16) / 255 : 1 };
+  }
+  const alpha = (x) => (x === undefined ? 1 : x.endsWith('%') ? parseFloat(x) / 100 : parseFloat(x));
+  m = /^rgba?\(\s*([\d.]+%?)[\s,]+([\d.]+%?)[\s,]+([\d.]+%?)\s*(?:[/,]\s*([\d.]+%?))?\s*\)$/i.exec(s);
   if (m) {
-    const a = m[4] === undefined ? 1 : m[4].endsWith('%') ? parseFloat(m[4]) / 100 : parseFloat(m[4]);
-    return { r: +m[1], g: +m[2], b: +m[3], a };
+    const ch = (x) => (x.endsWith('%') ? (parseFloat(x) / 100) * 255 : parseFloat(x));
+    return { r: ch(m[1]), g: ch(m[2]), b: ch(m[3]), a: alpha(m[4]) };
+  }
+  m = /^hsla?\(\s*([\d.]+)(?:deg)?[\s,]+([\d.]+)%[\s,]+([\d.]+)%\s*(?:[/,]\s*([\d.]+%?))?\s*\)$/i.exec(s);
+  if (m) {
+    const [h, sat, l] = [parseFloat(m[1]) / 360, parseFloat(m[2]) / 100, parseFloat(m[3]) / 100];
+    const q = l < 0.5 ? l * (1 + sat) : l + sat - l * sat;
+    const p = 2 * l - q;
+    const t = (x) => {
+      const k = (x + 1) % 1;
+      return k < 1 / 6 ? p + (q - p) * 6 * k : k < 1 / 2 ? q : k < 2 / 3 ? p + (q - p) * (2 / 3 - k) * 6 : p;
+    };
+    return { r: t(h + 1 / 3) * 255, g: t(h) * 255, b: t(h - 1 / 3) * 255, a: alpha(m[4]) };
   }
   throw new Error(`无法解析颜色：${v}`);
 }
 
+const COLOR_IN_TEXT = /#[0-9a-f]{3,8}\b|(?:rgba?|hsla?)\([^)]*\)/gi;
+
+/** 解析为颜色列表：普通色值得到一个；box-shadow（焦点环）得到每一层的颜色，逐层核对 */
 function resolveVar(theme, name, seen = new Set()) {
   if (seen.has(name)) throw new Error(`循环引用 ${name}`);
   seen.add(name);
@@ -59,9 +79,13 @@ function resolveVar(theme, name, seen = new Set()) {
   if (v === undefined) throw new Error(`未定义 ${name}`);
   const ref = /^var\((--[\w-]+)\)$/.exec(v);
   if (ref) return resolveVar(theme, ref[1], seen);
-  // box-shadow 形式的焦点环（如 `0 0 0 3px rgb(…)`）：取其中的颜色
-  const shadow = /(#[0-9a-f]{6}|rgba?\([^)]*\))\s*$/i.exec(v);
-  return parseColor(shadow && v.includes('px') ? shadow[1] : v);
+  if (/\bvar\(/.test(v)) throw new Error(`${name} 的值含内嵌 var()，检查脚本未覆盖：${v}`);
+  if (/\dpx\b/.test(v)) {
+    const layers = v.match(COLOR_IN_TEXT);
+    if (!layers) throw new Error(`${name} 的 shadow 里没有颜色：${v}`);
+    return layers.map(parseColor);
+  }
+  return [parseColor(v)];
 }
 
 const over = (fg, bg) => ({
@@ -111,22 +135,32 @@ const PAIRS = [
   ...['--aster-primary-ring', '--aster-shadow-ring', '--aster-shadow-ring-danger'].flatMap((ring) => SURFACES.map((bg) => [ring, bg, UI])),
 ];
 
-function surface(theme, name) {
-  const c = resolveVar(theme, name);
-  return c.a < 1 ? over(c, resolveVar(theme, '--aster-bg')) : c;
-}
+const one = (theme, name) => {
+  const list = resolveVar(theme, name);
+  if (list.length !== 1) throw new Error(`${name} 不是单一颜色`);
+  return list[0];
+};
+const BASE_SURFACES = new Set(SURFACES);
 
 const failures = [];
 const rows = [];
-for (const [themeName, theme] of Object.entries(THEMES)) {
-  // 有的主题块不重定义 ring：沿用 :root
-  for (const [fgName, bgName, min] of PAIRS) {
-    const bg = surface(theme, bgName);
-    let fg = resolveVar(theme, fgName);
-    if (fg.a < 1) fg = over(fg, bg);
+function check(themeName, fgName, bgName, bg, min, label = bgName) {
+  for (const raw of resolveVar(THEMES[themeName], fgName)) {
+    const fg = raw.a < 1 ? over(raw, bg) : raw;
     const r = ratio(fg, bg);
-    rows.push({ themeName, fgName, bgName, r, min });
-    if (r < min) failures.push(`${themeName}: ${fgName} on ${bgName} = ${r.toFixed(2)}:1 < ${min}:1`);
+    rows.push({ themeName, fgName, bgName: label, r, min });
+    if (r < min) failures.push(`${themeName}: ${fgName} on ${label} = ${r.toFixed(2)}:1 < ${min}:1`);
+  }
+}
+for (const [themeName, theme] of Object.entries(THEMES)) {
+  for (const [fgName, bgName, min] of PAIRS) {
+    const bg = one(theme, bgName);
+    if (bg.a === 1) {
+      check(themeName, fgName, bgName, bg, min);
+      continue;
+    }
+    // 半透明背景（*-subtle 着色）按实际可能落在的每一种表面分别合成后核对
+    for (const s of BASE_SURFACES) check(themeName, fgName, bgName, over(bg, one(theme, s)), min, `${bgName} over ${s}`);
   }
 }
 
@@ -138,4 +172,4 @@ if (failures.length) {
   console.error(`[check-contrast] ${failures.length} 组对比度不达标：\n  ${failures.join('\n  ')}`);
   process.exit(1);
 }
-console.log(`[check-contrast] OK — ${rows.length} 组（${Object.keys(THEMES).length} 个主题块 × ${PAIRS.length} 组）全部达标`);
+console.log(`[check-contrast] OK — ${rows.length} 组对比度（${Object.keys(THEMES).length} 个主题块）全部达标`);
