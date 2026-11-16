@@ -56,12 +56,13 @@ export function Breadcrumbs({
   if (cleaned.length === 0) return null;
 
   return (
-    <nav aria-label="Breadcrumb" className={cn('flex items-center', className)}>
-      <ol className="flex items-center gap-1.5 text-sm">
+    // min-w-0 + flex-wrap：长路径在窄屏折行而不是撑宽整页（aster-cloud#774）
+    <nav aria-label="Breadcrumb" className={cn('flex min-w-0 items-center', className)}>
+      <ol className="flex min-w-0 flex-wrap items-center gap-x-1.5 text-sm">
         {cleaned.map((item, i) => {
           const isLast = i === cleaned.length - 1;
           return (
-            <li key={`${item.label}-${i}`} className="flex items-center gap-1.5">
+            <li key={`${item.label}-${i}`} className="flex min-w-0 items-center gap-1.5">
               {i > 0 && (
                 <ChevronRight
                   className="size-3.5 shrink-0 text-fg-subtle"
@@ -79,9 +80,10 @@ export function Breadcrumbs({
                   {item.label}
                 </span>
               ) : (
+                // 移动端点击目标 ≥44px（WCAG 2.5.5）：上下内边距撑出命中区、负外边距抵消，视觉行高不变
                 <LinkComponent
                   href={item.href}
-                  className="truncate text-fg-muted transition-colors hover:text-fg"
+                  className="inline-block max-w-full truncate py-3 -my-3 text-fg-muted transition-colors hover:text-fg sm:py-0 sm:my-0"
                 >
                   {item.label}
                 </LinkComponent>

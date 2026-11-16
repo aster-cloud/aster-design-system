@@ -75,7 +75,8 @@ export function DataTable<Row>({
       aria-label={ariaLabel}
       tabIndex={0}
       className={cn(
-        'overflow-x-auto rounded-xl border border-border bg-bg shadow-sm',
+        // relative：滚动容器须是 sr-only 表头（position:absolute）的包含块，否则它逃出 overflow 撑宽整页（aster-cloud#774）
+        'relative overflow-x-auto rounded-xl border border-border bg-bg shadow-sm',
         'focus-visible:outline-none focus-visible:shadow-ring',
         className,
       )}

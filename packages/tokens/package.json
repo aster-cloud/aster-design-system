@@ -45,9 +45,10 @@
     "src"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.esm.json && tsc -p tsconfig.cjs.json && node ./scripts/postbuild.mjs && node ./scripts/check-exports.mjs",
+    "build": "tsc -p tsconfig.esm.json && tsc -p tsconfig.cjs.json && node ./scripts/postbuild.mjs && node ./scripts/check-exports.mjs && node ./scripts/check-contrast.mjs && node ./scripts/check-semantic-sync.mjs",
     "typecheck": "tsc -p tsconfig.esm.json --noEmit",
-    "test": "node ./scripts/check-exports.mjs"
+    "test": "node ./scripts/check-exports.mjs && node ./scripts/check-contrast.mjs && node ./scripts/check-semantic-sync.mjs",
+    "contrast:table": "node ./scripts/check-contrast.mjs --table"
   },
   "devDependencies": {
     "typescript": "^7.0.2"
