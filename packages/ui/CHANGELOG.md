@@ -12,6 +12,8 @@ Released with repo tag `v0.3.3` (created when this release is published; the com
 ### Fixed
 - `DataTable`: the scroll region is `relative`, so `srHeader` columns (sr-only, absolutely positioned) no longer escape
   `overflow-x-auto` and widen the page on mobile.
+- `Input`: keeps its focus ring while keyboard focus is on an inner part of a `date` / `time` input (e.g. the
+  calendar button), where the host element does not match `:focus-visible`.
 - `Breadcrumbs`: the trail wraps (`min-w-0` + `flex-wrap`) instead of overflowing narrow viewports, and links get a
   44px tap target below `sm` via padding offset by negative margin (layout unchanged).
 
