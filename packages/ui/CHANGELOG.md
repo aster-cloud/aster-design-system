@@ -5,6 +5,18 @@ All notable changes to this package are documented here. Semantic versioning
 
 ## [Unreleased]
 
+## [0.3.2] — 2026-11-16
+
+Released with repo tag `v0.3.3` (created when this release is published; the compare links below resolve then).
+
+### Fixed
+- `DataTable`: the scroll region is `relative`, so `srHeader` columns (sr-only, absolutely positioned) no longer escape
+  `overflow-x-auto` and widen the page on mobile.
+- `Input`: keeps its focus ring while keyboard focus is on an inner part of a `date` / `time` input (e.g. the
+  calendar button), where the host element does not match `:focus-visible`.
+- `Breadcrumbs`: the trail wraps (`min-w-0` + `flex-wrap`) instead of overflowing narrow viewports, and links get a
+  44px tap target below `sm` via padding offset by negative margin (layout unchanged).
+
 ## [0.3.1] — 2026-10-25
 
 ### Fixed
@@ -53,6 +65,7 @@ All notable changes to this package are documented here. Semantic versioning
 ### Added
 - Initial scaffold inside `aster-design-system` monorepo bootstrap.
 
-[Unreleased]: https://github.com/aster-cloud/aster-design-system/compare/ui-v0.3.0...HEAD
+[Unreleased]: https://github.com/aster-cloud/aster-design-system/compare/v0.3.3...HEAD
+[0.3.2]: https://github.com/aster-cloud/aster-design-system/compare/v0.3.2...v0.3.3
 [0.3.0]: https://github.com/aster-cloud/aster-design-system/compare/ui-v0.2.0...ui-v0.3.0
 [0.2.0]: https://github.com/aster-cloud/aster-design-system/compare/ui-v0.1.0...ui-v0.2.0

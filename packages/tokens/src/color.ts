@@ -130,18 +130,19 @@ export const semantic = {
   bgMuted:        zinc[100],
   fg:             zinc[900],
   fgMuted:        zinc[600],
-  fgSubtle:       zinc[500],
+  /** OKLCH(0.52 0.014 286)：zinc-500 在 bgMuted 上只有 4.40:1，调暗后 ≥5.0:1（与 tokens.css 一致） */
+  fgSubtle:       '#686871',
   border:         zinc[200],
   borderStrong:   zinc[300],
 
-  /** Status. */
-  success:        emerald[600],
+  /** Status —— 与 tokens.css 浅色主题保持一致（此前 TS 侧滞后于 CSS 的 AA 调整）。 */
+  success:        emerald[700],
   successFg:      '#ffffff',
   successSubtle:  emerald[50],
-  warning:        amber[500],
-  warningFg:      zinc[900],
+  warning:        amber[700],
+  warningFg:      '#ffffff',
   warningSubtle:  amber[50],
-  danger:         rose[600],
+  danger:         rose[700],
   dangerFg:       '#ffffff',
   dangerSubtle:   rose[50],
 } as const;

@@ -19,6 +19,8 @@ const inputVariants = cva(
     'font-sans',
     'transition-colors duration-fast ease-standard',
     'focus-visible:outline-none focus-visible:border-primary focus-visible:shadow-ring',
+    // date / time 输入的日历按钮等子字段获得焦点时，宿主不匹配 :focus-visible，靠 :focus-within 保住焦点环（aster-cloud#774）
+    'focus-within:border-primary focus-within:shadow-ring',
     'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-bg-muted',
     'file:border-0 file:bg-transparent file:font-medium file:text-fg',
   ].join(' '),
@@ -31,7 +33,7 @@ const inputVariants = cva(
       },
       state: {
         default: 'border-border',
-        invalid: 'border-danger focus-visible:border-danger focus-visible:shadow-ring-danger',
+        invalid: 'border-danger focus-visible:border-danger focus-visible:shadow-ring-danger focus-within:border-danger focus-within:shadow-ring-danger',
       },
     },
     defaultVariants: { size: 'md', state: 'default' },

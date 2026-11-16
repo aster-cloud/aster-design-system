@@ -76,14 +76,18 @@
   --aster-color-emerald-500: #10b981;
   --aster-color-emerald-600: #059669;
   --aster-color-emerald-700: #047857;
+  --aster-color-emerald-200: #a7f3d0;
   --aster-color-emerald-50:  #ecfdf5;
   --aster-color-amber-500:   #f59e0b;
   --aster-color-amber-600:   #d97706;
   --aster-color-amber-700:   #b45309;
+  --aster-color-amber-200:   #fde68a;
   --aster-color-amber-50:    #fffbeb;
+  --aster-color-rose-400:    #fb7185;
   --aster-color-rose-500:    #f43f5e;
   --aster-color-rose-600:    #e11d48;
   --aster-color-rose-700:    #be123c;
+  --aster-color-rose-200:    #fecdd3;
   --aster-color-rose-50:     #fff1f2;
 
   /* ===== Semantic role tokens (consumer-facing) ===== */
@@ -105,7 +109,9 @@
   --aster-bg-muted:        var(--aster-color-zinc-100);
   --aster-fg:              var(--aster-color-zinc-900);
   --aster-fg-muted:        var(--aster-color-zinc-600);
-  --aster-fg-subtle:       var(--aster-color-zinc-500);
+  /* zinc-500 在 bg-muted（zinc-100）上只有 4.40:1。保持 zinc 的色相与彩度，OKLCH 明度 0.552 → 0.52：
+   * bg 5.52 / bg-subtle 5.28 / bg-muted 5.02，仍明显浅于 fg-muted（L 0.442），层级不变（aster-cloud#774）。 */
+  --aster-fg-subtle:       #686871;
   --aster-border:          var(--aster-color-zinc-200);
   --aster-border-strong:   var(--aster-color-zinc-300);
 
@@ -148,8 +154,10 @@
   --aster-shadow-xl:    0 20px 25px -5px rgb(9 9 11 / 0.08), 0 8px 10px -6px rgb(9 9 11 / 0.04);
   --aster-shadow-2xl:   0 25px 50px -12px rgb(9 9 11 / 0.18);
   --aster-shadow-brand: 0 8px 24px -8px rgb(124 58 237 / 0.35);
-  --aster-shadow-ring:  0 0 0 3px rgb(139 92 246 / 0.35);
-  --aster-shadow-ring-danger: 0 0 0 3px rgb(244 63 94 / 0.30);
+  /* 焦点环不透明：原先 violet-500 / 0.35 合成到白底只有 1.57:1，达不到非文字 UI 的 3:1（WCAG 1.4.11）。
+   * 现为 primary-ring（violet-500）实色：bg 4.23 / bg-subtle 4.06 / bg-muted 3.85；danger 环 rose-600 实色 ≥4.2（aster-cloud#774）。 */
+  --aster-shadow-ring:  0 0 0 3px rgb(139 92 246);
+  --aster-shadow-ring-danger: 0 0 0 3px rgb(225 29 72);
 
   /* ===== Motion ===== */
   --aster-duration-instant: 0ms;
@@ -205,7 +213,9 @@
   --aster-bg-muted:        var(--aster-color-zinc-100);
   --aster-fg:              var(--aster-color-zinc-900);
   --aster-fg-muted:        var(--aster-color-zinc-600);
-  --aster-fg-subtle:       var(--aster-color-zinc-500);
+  /* zinc-500 在 bg-muted（zinc-100）上只有 4.40:1。保持 zinc 的色相与彩度，OKLCH 明度 0.552 → 0.52：
+   * bg 5.52 / bg-subtle 5.28 / bg-muted 5.02，仍明显浅于 fg-muted（L 0.442），层级不变（aster-cloud#774）。 */
+  --aster-fg-subtle:       #686871;
   --aster-border:          var(--aster-color-zinc-200);
   --aster-border-strong:   var(--aster-color-zinc-300);
 
@@ -231,17 +241,21 @@
   --aster-shadow-xl:    0 20px 25px -5px rgb(9 9 11 / 0.08), 0 8px 10px -6px rgb(9 9 11 / 0.04);
   --aster-shadow-2xl:   0 25px 50px -12px rgb(9 9 11 / 0.18);
   --aster-shadow-brand: 0 8px 24px -8px rgb(124 58 237 / 0.35);
-  --aster-shadow-ring:  0 0 0 3px rgb(139 92 246 / 0.35);
-  --aster-shadow-ring-danger: 0 0 0 3px rgb(244 63 94 / 0.30);
+  /* 焦点环不透明：原先 violet-500 / 0.35 合成到白底只有 1.57:1，达不到非文字 UI 的 3:1（WCAG 1.4.11）。
+   * 现为 primary-ring（violet-500）实色：bg 4.23 / bg-subtle 4.06 / bg-muted 3.85；danger 环 rose-600 实色 ≥4.2（aster-cloud#774）。 */
+  --aster-shadow-ring:  0 0 0 3px rgb(139 92 246);
+  --aster-shadow-ring-danger: 0 0 0 3px rgb(225 29 72);
 }
 
 /* Dark theme — explicit attribute wins; OS-driven fallback at the bottom. */
 [data-theme="dark"] {
   /*
-   * Dark-mode primary is violet-400 (not -500). text-primary on the
-   * 0.18-alpha primary-subtle tint over zinc-950 was 3.98:1 with -500;
-   * -400 raises that to ~5.1:1 (clears AA). bg-primary with zinc-950
-   * primary-fg goes from 7.71 to 11.0 — well within range.
+   * Dark-mode primary is violet-400 (not -500), measured by scripts/check-contrast.mjs:
+   *   text-primary on primary-subtle (violet-500 @ 0.15) over bg / bg-subtle / bg-muted = 6.45 / 5.56 / 4.65,
+   *   on bg / bg-subtle / bg-muted = 7.31 / 6.51 / 5.47; primary-fg zinc-950 on it = 7.31.
+   * Why not a darker violet with white text: white needs relative luminance ≤ 0.183, and
+   * that same token used as text on zinc-950 then tops out at 4.40:1 — no single violet
+   * clears 4.5:1 both ways, so dark fills carry dark text (aster-cloud#774).
    */
   --aster-primary:        var(--aster-color-violet-400);
   --aster-primary-hover:  var(--aster-color-violet-300);
@@ -255,10 +269,12 @@
    */
   --aster-primary-fg:     var(--aster-color-zinc-950);
   /*
-   * primary-subtle alpha bumped 0.12 → 0.18 so violet-500 text on the
-   * dark-mode subtle tint clears 4.5:1 (was 4.26:1 at 0.12 over zinc-950).
+   * primary-subtle alpha 0.15: the tint can sit on bg-muted cards too, where
+   * violet-400 text on a 0.18 tint was 4.49:1; 0.15 gives ≥4.65 on every surface.
    */
-  --aster-primary-subtle: rgb(139 92 246 / 0.18);
+  --aster-primary-subtle: rgb(139 92 246 / 0.15);
+  /* 暗色焦点环用 violet-400：在 bg-muted 上 5.47:1（violet-500 仅 3.52）（aster-cloud#774） */
+  --aster-primary-ring:   var(--aster-color-violet-400);
 
   --aster-accent:         var(--aster-color-sky-400);
   --aster-accent-hover:   var(--aster-color-sky-300);
@@ -291,7 +307,8 @@
   --aster-warning:        var(--aster-color-amber-500);
   --aster-warning-fg:     var(--aster-color-zinc-950);
   --aster-warning-subtle: rgb(245 158 11 / 0.12);
-  --aster-danger:         var(--aster-color-rose-500);
+  /* rose-500 作文字在 bg-muted（zinc-800）上只有 4.06:1；rose-400 为 5.53，作填充时 zinc-950 前景 7.39（aster-cloud#774） */
+  --aster-danger:         var(--aster-color-rose-400);
   --aster-danger-fg:      var(--aster-color-zinc-950);
   --aster-danger-subtle:  rgb(244 63 94 / 0.15);
 
@@ -310,8 +327,8 @@
   --aster-shadow-xl:    0 20px 25px -5px rgb(0 0 0 / 0.7), 0 8px 10px -6px rgb(0 0 0 / 0.4);
   --aster-shadow-2xl:   0 25px 50px -12px rgb(0 0 0 / 0.8);
   --aster-shadow-brand: 0 8px 24px -8px rgb(167 139 250 / 0.5);
-  --aster-shadow-ring:  0 0 0 3px rgb(167 139 250 / 0.45);
-  --aster-shadow-ring-danger: 0 0 0 3px rgb(251 113 133 / 0.40);
+  --aster-shadow-ring:  0 0 0 3px rgb(167 139 250);
+  --aster-shadow-ring-danger: 0 0 0 3px rgb(251 113 133);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -321,7 +338,9 @@
     --aster-primary-active: var(--aster-color-violet-200);
     /* Match [data-theme="dark"]: dark fg on light brand fills for AA. */
     --aster-primary-fg:     var(--aster-color-zinc-950);
-    --aster-primary-subtle: rgb(139 92 246 / 0.18);
+    --aster-primary-subtle: rgb(139 92 246 / 0.15);
+    /* 暗色焦点环用 violet-400：在 bg-muted 上 5.47:1（violet-500 仅 3.52）（aster-cloud#774） */
+    --aster-primary-ring:   var(--aster-color-violet-400);
     --aster-accent:         var(--aster-color-sky-400);
     --aster-accent-hover:   var(--aster-color-sky-300);
     --aster-accent-fg:      var(--aster-color-zinc-950);
@@ -340,7 +359,8 @@
     --aster-warning:        var(--aster-color-amber-500);
     --aster-warning-fg:     var(--aster-color-zinc-950);
     --aster-warning-subtle: rgb(245 158 11 / 0.12);
-    --aster-danger:         var(--aster-color-rose-500);
+    /* rose-500 作文字在 bg-muted（zinc-800）上只有 4.06:1；rose-400 为 5.53，作填充时 zinc-950 前景 7.39（aster-cloud#774） */
+    --aster-danger:         var(--aster-color-rose-400);
     --aster-danger-fg:      var(--aster-color-zinc-950);
     --aster-danger-subtle:  rgb(244 63 94 / 0.15);
     /* R31-2 border-subtle dark via prefers-color-scheme fallback */
@@ -349,7 +369,7 @@
     --aster-border-warning-subtle: rgb(120 53 15 / 0.5);
     --aster-border-danger-subtle:  rgb(136 19 55 / 0.5);
     --aster-shadow-brand:   0 8px 24px -8px rgb(167 139 250 / 0.5);
-    --aster-shadow-ring:    0 0 0 3px rgb(167 139 250 / 0.45);
-    --aster-shadow-ring-danger: 0 0 0 3px rgb(251 113 133 / 0.40);
+    --aster-shadow-ring:  0 0 0 3px rgb(167 139 250);
+    --aster-shadow-ring-danger: 0 0 0 3px rgb(251 113 133);
   }
 }
