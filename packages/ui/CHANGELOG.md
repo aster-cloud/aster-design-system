@@ -7,6 +7,8 @@ All notable changes to this package are documented here. Semantic versioning
 
 ## [0.3.2] — 2026-11-16
 
+Released with repo tag `v0.3.3` (created when this release is published; the compare links below resolve then).
+
 ### Fixed
 - `DataTable`: the scroll region is `relative`, so `srHeader` columns (sr-only, absolutely positioned) no longer escape
   `overflow-x-auto` and widen the page on mobile.

@@ -7,6 +7,8 @@ All notable changes to this package are documented here. Semantic versioning
 
 ## [0.2.2] — 2026-11-16
 
+Released with repo tag `v0.3.3` (created when this release is published; the compare links below resolve then).
+
 ### Fixed
 - Every semantic foreground/background pair now meets WCAG AA (4.5:1 text, 3:1 focus rings) in light, dark and the
   `prefers-color-scheme` fallback, with translucent `*-subtle` tints composited over each surface;
